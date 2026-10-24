@@ -4,6 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Color Vision Lab</title>
 <script>try{const t=localStorage.getItem("cvl-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<!-- Cloudflare Web Analytics: page views only; test results never leave the browser --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "a1f48fb28d0f4b0c80cafdf27f57ea07"}'></script><!-- End Cloudflare Web Analytics -->
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -709,7 +710,7 @@ function renderResults(){
   }else if(type==="rg"){const k=V.meas&&V.meas.protan>V.meas.deutan?"protan":"deutan";
     vizFromResult(k,V.meas?V.meas[k]:.8,`Your result is red-green but the type is unclear, so this starts with ${k}. ${V.meas?sevNote(k,V.meas[k],false):""} Switch to ${k==="protan"?"deutan":"protan"} too; the strength follows your threshold on that axis. Whichever pair looks more alike to you is likely your type.`)}
   else vizFromResult("deutan",1,type==="normal"?"You tested normal, so the filtered photo shows what people with a color vision deficiency see. Pick a type to compare.":"Your result is unclear, so this shows deuteranopia, the most common strong type. Pick a type to compare.");
-  const fq=["protan","deutan","tritan"].includes(type)?`?type=${type}&sev=${Math.round(V.def.sev*100)}`:type==="rg"||type==="normal"?`?type=${type}`:"";
+  const fq=["protan","deutan","tritan"].includes(type)?`#type=${type}&sev=${Math.round(V.def.sev*100)}`:type==="rg"||type==="normal"?`#type=${type}`:""; // fragment: never sent to any server
   $("#filterLink").href="color-filters.html"+fq;
 }
 function sevNote(k,sv,dich){

@@ -4,6 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Screen Color Filters</title>
 <script>try{const t=localStorage.getItem("cvl-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<!-- Cloudflare Web Analytics: page views only; test results never leave the browser --><script type='module' src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "a1f48fb28d0f4b0c80cafdf27f57ea07"}'></script><!-- End Cloudflare Web Analytics -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Familjen+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap">
@@ -232,13 +233,13 @@ $("#themeBtn").addEventListener("click",()=>{
 matchMedia("(prefers-color-scheme: dark)").addEventListener("change",paintTheme);
 paintTheme();
 
-/* ---------- recommendation from the results page (?type=deutan&sev=63) ---------- */
+/* ---------- recommendation from the results page (#type=deutan&sev=63) ---------- */
 // sev is the simulation strength from the results page: the share of a color difference your eyes
 // lose along that axis (100 = a missing cone). It is used as the starting Intensity; the filter
 // should compensate roughly as much as you lose. It's a starting point, not a calibration.
 const WIN={deutan:"Red-green (green weak, deuteranopia)",protan:"Red-green (red weak, protanopia)",tritan:"Blue-yellow (tritanopia)"};
 const NAME={deutan:"deutan (green weak)",protan:"protan (red weak)",tritan:"tritan (blue weak)"};
-const q=new URLSearchParams(location.search);
+const q=new URLSearchParams(location.hash.slice(1)||location.search); // results arrive in the #fragment so they never reach a server
 const type=q.get("type"),sevRaw=parseInt(q.get("sev"),10);
 const sev=Number.isFinite(sevRaw)?Math.max(0,Math.min(100,sevRaw)):null;
 const isWin=/Windows/.test(navigator.userAgent);
