@@ -1,0 +1,527 @@
+<title>Color Vision Lab</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Familjen+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Layout: one 52rem column of numbered test panels. The interface is deliberately achromatic
+   so the only color on screen is the stimulus itself. */
+:root{
+  --bg:#e7e7e7; --surface:#f4f4f4; --ink:#151515; --muted:#575757; --line:#c3c3c3; --on-ink:#f4f4f4; --soft:#d6d6d6;
+  --stage:#2e2e2e;            /* fixed neutral surround for stimuli, identical in both themes */
+  --f-display:"Familjen Grotesk","Helvetica Neue",Arial,sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#191919; --surface:#232323; --ink:#ebebeb; --muted:#a2a2a2; --line:#3b3b3b; --on-ink:#151515; --soft:#2f2f2f; color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#191919; --surface:#232323; --ink:#ebebeb; --muted:#a2a2a2; --line:#3b3b3b; --on-ink:#151515; --soft:#2f2f2f; color-scheme:dark}
+
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:1.0625rem;line-height:1.55}
+.wrap{max-width:52rem;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:2.5rem 4rem;display:grid;gap:2rem}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.1}
+h1{font-size:clamp(2.2rem,6vw,3.4rem);font-weight:700;letter-spacing:-.02em}
+h2{font-size:1.7rem;font-weight:700;letter-spacing:-.01em}
+h3{font-size:1.15rem;font-weight:700}
+p{margin:0;max-width:65ch}
+.lede{font-size:1.15rem;color:var(--muted)}
+.eyebrow{font-family:var(--f-mono);font-size:.75rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+.mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+header{display:grid;gap:.9rem}
+.note{font-size:.95rem;color:var(--muted);border-left:2px solid var(--line);padding-left:.9rem}
+
+/* step navigation */
+nav.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+nav.steps button{all:unset;cursor:pointer;padding:.8rem 1rem;display:grid;gap:.15rem;border-right:1px solid var(--line);background:var(--surface)}
+nav.steps button:last-child{border-right:0}
+nav.steps button[aria-selected="true"]{background:var(--ink);color:var(--on-ink)}
+nav.steps button[aria-selected="true"] .st{color:var(--on-ink);opacity:.75}
+nav.steps button:focus-visible{outline:3px solid var(--ink);outline-offset:-5px}
+nav.steps b{font-family:var(--f-display);font-size:1.05rem}
+nav.steps .st{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);letter-spacing:.04em}
+@media (max-width:640px){nav.steps{grid-template-columns:1fr 1fr}nav.steps button:nth-child(2){border-right:0}nav.steps button:nth-child(-n+2){border-bottom:1px solid var(--line)}}
+
+section.panel{display:grid;gap:1.25rem}
+.btn{font:inherit;font-weight:700;cursor:pointer;border:1px solid var(--ink);background:var(--ink);color:var(--on-ink);padding:.6rem 1.1rem;border-radius:4px}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn:focus-visible,.pad button:focus-visible,.cap:focus-visible,.seg label:has(input:focus-visible){outline:3px solid var(--ink);outline-offset:2px}
+.row{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center}
+
+/* gap test */
+.gapgrid{display:grid;grid-template-columns:minmax(0,1fr) 15rem;gap:1.5rem;align-items:start}
+@media (max-width:720px){.gapgrid{grid-template-columns:1fr}}
+.stage{background:var(--stage);border-radius:6px;padding:12px;display:grid;place-items:center;position:relative}
+#gapCanvas{width:100%;max-width:440px;aspect-ratio:1;display:block}
+.stage .tag{position:absolute;top:10px;left:12px;font-family:var(--f-mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#bdbdbd}
+.side{display:grid;gap:1rem;min-width:0}
+.pad{display:grid;grid-template-columns:repeat(3,3.4rem);grid-template-rows:repeat(3,3.4rem);gap:.4rem;justify-content:start}
+.pad button{font:inherit;font-size:1.3rem;cursor:pointer;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:4px}
+.pad button:hover:not(:disabled){border-color:var(--ink)}
+.pad button:disabled{opacity:.35;cursor:not-allowed}
+.pad .u{grid-area:1/2}.pad .l{grid-area:2/1}.pad .r{grid-area:2/3}.pad .d{grid-area:3/2}
+.progress{height:4px;background:var(--soft);border-radius:2px;overflow:hidden}
+.progress i{display:block;height:100%;background:var(--ink);width:0;transition:width .2s}
+.kbd{font-family:var(--f-mono);font-size:.8rem;border:1px solid var(--line);border-radius:3px;padding:0 .3rem}
+
+/* threshold chart */
+.chart{display:grid;gap:.9rem}
+.crow{display:grid;grid-template-columns:8.5rem minmax(0,1fr) 5.5rem;gap:.8rem;align-items:center}
+.track{position:relative;height:22px;background:var(--soft);border-radius:3px}
+.track .norm{position:absolute;left:0;top:0;bottom:0;background:var(--line);border-radius:3px 0 0 3px}
+.track .lim{position:absolute;top:-3px;bottom:-3px;border-left:2px dashed var(--muted)}
+.track .mark{position:absolute;top:-4px;bottom:-4px;width:4px;margin-left:-2px;background:var(--ink);border-radius:2px}
+.axis{position:relative;height:1.1rem;font-family:var(--f-mono);font-size:.7rem;color:var(--muted)}
+.axis span{position:absolute;transform:translateX(-50%)}
+.legend{display:flex;flex-wrap:wrap;gap:1rem;font-size:.85rem;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:10px;margin-right:.35rem;vertical-align:middle}
+@media (max-width:520px){.crow{grid-template-columns:1fr 4.5rem}.crow .track,.crow .axis{grid-column:1/-1;grid-row:2}}
+
+/* arrangement test */
+.tray{background:var(--stage);border-radius:6px;padding:14px;display:grid;gap:.7rem}
+.tray .lbl{font-family:var(--f-mono);font-size:.7rem;letter-spacing:.1em;text-transform:uppercase;color:#bdbdbd}
+.caps{display:flex;flex-wrap:wrap;gap:8px;min-height:46px}
+.cap{width:42px;height:42px;border-radius:50%;border:2px solid #1c1c1c;cursor:pointer;padding:0;position:relative}
+.cap.ref{cursor:default;box-shadow:0 0 0 2px #bdbdbd}
+.cap .n{position:absolute;inset:auto 0 -1.25rem 0;font-family:var(--f-mono);font-size:.65rem;color:#bdbdbd;text-align:center}
+.caps.numbered{padding-bottom:1.1rem}
+.slot{width:42px;height:42px;border-radius:50%;border:2px dashed #555}
+.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:1.5rem;align-items:start}
+@media (max-width:720px){.split{grid-template-columns:1fr}}
+.diagram{background:var(--surface);border:1px solid var(--line);border-radius:6px;padding:.5rem}
+.diagram svg{width:100%;height:auto;display:block}
+dl.stats{display:grid;grid-template-columns:auto 1fr;gap:.35rem 1rem;margin:0}
+dl.stats dt{color:var(--muted)}
+dl.stats dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums}
+
+/* match test */
+.strip{display:flex;height:52px;border-radius:4px;overflow:hidden}
+.strip i{flex:1}
+.refstrip{background:var(--stage);padding:12px;border-radius:6px;display:grid;gap:.5rem}
+.cand{display:grid;grid-template-columns:2rem minmax(0,1fr) auto;gap:1rem;align-items:center;background:var(--stage);padding:12px;border-radius:6px}
+.cand .letter{font-family:var(--f-display);font-weight:700;font-size:1.3rem;color:#d8d8d8;text-align:center}
+@media (max-width:600px){.cand{grid-template-columns:2rem minmax(0,1fr)}.cand .seg{grid-column:1/-1}}
+.seg{display:inline-flex;border:1px solid #6a6a6a;border-radius:4px;overflow:hidden}
+.seg label{padding:.4rem .7rem;cursor:pointer;font-size:.9rem;color:#d8d8d8;border-right:1px solid #6a6a6a;white-space:nowrap}
+.seg label:last-child{border-right:0}
+.seg input{position:absolute;opacity:0;pointer-events:none}
+.seg label:has(input:checked){background:#e6e6e6;color:#151515}
+
+/* results */
+.verdict{border:2px solid var(--ink);border-radius:6px;padding:1.4rem;display:grid;gap:.7rem;background:var(--surface)}
+.verdict .big{font-family:var(--f-display);font-weight:700;font-size:clamp(1.7rem,4.5vw,2.4rem);line-height:1.1;text-wrap:balance}
+.evidence{display:grid;gap:0;border-top:1px solid var(--line)}
+.evidence div{display:grid;grid-template-columns:11rem minmax(0,1fr);gap:1rem;padding:.75rem 0;border-bottom:1px solid var(--line)}
+@media (max-width:560px){.evidence div{grid-template-columns:1fr;gap:.2rem}}
+.evidence b{font-family:var(--f-display)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+th,td{text-align:left;padding:.55rem .6rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--f-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:400}
+tr.hit td{background:var(--soft)}
+tr.hit td:first-child{box-shadow:inset 4px 0 0 var(--ink)}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="eyebrow">Three screen tests · about 8 minutes</div>
+    <h1>Color Vision Lab</h1>
+    <p class="lede">Three short tests that look at your color vision from different angles. Together they point to which cone type is affected (red, green or blue) and roughly how strongly.</p>
+    <p class="note">Before you start: turn off Night light, f.lux, True Tone or any blue-light filter, set brightness to normal, and sit about an arm's length from the screen. A monitor isn't a calibrated clinical instrument, so treat the result as a well-informed guess and confirm it with an optometrist (an anomaloscope test settles the exact type).</p>
+  </header>
+
+  <nav class="steps" role="tablist" aria-label="Tests">
+    <button role="tab" id="tab-gap" data-step="gap" aria-selected="true"><span class="st" id="st-gap">1 · not started</span><b>Find the gap</b></button>
+    <button role="tab" id="tab-arr" data-step="arr" aria-selected="false"><span class="st" id="st-arr">2 · not started</span><b>Hue order</b></button>
+    <button role="tab" id="tab-match" data-step="match" aria-selected="false"><span class="st" id="st-match">3 · not started</span><b>Match</b></button>
+    <button role="tab" id="tab-res" data-step="res" aria-selected="false"><span class="st" id="st-res">4 · results</span><b>Your type</b></button>
+  </nav>
+
+  <!-- TEST 1 -->
+  <section class="panel" id="p-gap">
+    <div class="eyebrow">Test 1 of 3 · Cambridge-style threshold test</div>
+    <h2>Find the gap in the C</h2>
+    <p>A ring shaped like the letter C is hidden in the dots. It differs from the background only in color; brightness is scrambled so you can't use it as a clue. Say which way the opening faces. When you can't see a C, say so instead of guessing. The color gets fainter as you succeed and stronger when you miss, separately along the red, green and blue confusion lines.</p>
+    <div class="gapgrid">
+      <div class="stage"><span class="tag" id="gapTag">Example · opening faces right</span><canvas id="gapCanvas" width="400" height="400" aria-label="Dot pattern stimulus"></canvas></div>
+      <div class="side">
+        <div class="pad" role="group" aria-label="Gap direction">
+          <button class="u" id="ans-0" data-dir="0" aria-label="Opening up" disabled>↑</button>
+          <button class="l" id="ans-3" data-dir="3" aria-label="Opening left" disabled>←</button>
+          <button class="r" id="ans-1" data-dir="1" aria-label="Opening right" disabled>→</button>
+          <button class="d" id="ans-2" data-dir="2" aria-label="Opening down" disabled>↓</button>
+        </div>
+        <button class="btn ghost" id="ans-none" disabled>I can't see a C</button>
+        <p style="font-size:.85rem;color:var(--muted)">Keys: <span class="kbd">← ↑ → ↓</span> for the opening, <span class="kbd">Space</span> for "can't see".</p>
+        <div class="progress" aria-hidden="true"><i id="gapBar"></i></div>
+        <p class="mono" style="font-size:.85rem" id="gapStatus">About 45–65 trials.</p>
+        <button class="btn" id="gapStart">Start test 1</button>
+      </div>
+    </div>
+    <div id="gapResult" hidden></div>
+  </section>
+
+  <!-- TEST 2 -->
+  <section class="panel" id="p-arr" hidden>
+    <div class="eyebrow">Test 2 of 3 · Farnsworth D-15 style</div>
+    <h2>Put the colors in order</h2>
+    <p>Starting from the fixed reference cap on the left, pick the cap that looks most similar to the last one you placed, and keep going until the tray is empty. Click a placed cap to send it back. People with a color deficiency tend to jump across the color circle along their own confusion line, and the direction of those jumps reveals the type.</p>
+    <div class="tray">
+      <span class="lbl">Your order</span>
+      <div class="caps" id="capRow"></div>
+      <span class="lbl">Tray</span>
+      <div class="caps" id="capTray"></div>
+    </div>
+    <div class="row">
+      <button class="btn" id="arrScore" disabled>Score my order</button>
+      <button class="btn ghost" id="arrReset">Reshuffle</button>
+    </div>
+    <div id="arrResult" hidden></div>
+  </section>
+
+  <!-- TEST 3 -->
+  <section class="panel" id="p-match" hidden>
+    <div class="eyebrow">Test 3 of 3 · Simulation match</div>
+    <h2>Which strip looks the same?</h2>
+    <p>Strips A, B and C are the reference recolored the way people with each kind of dichromacy see it. A person with that type sees their own strip as identical to the reference; others look different. Rate each strip honestly, comparing swatch by swatch.</p>
+    <div class="refstrip"><span class="eyebrow" style="color:#bdbdbd">Reference</span><div class="strip" id="refStrip"></div></div>
+    <div id="cands" style="display:grid;gap:.6rem"></div>
+    <div id="matchResult" hidden></div>
+  </section>
+
+  <!-- RESULTS -->
+  <section class="panel" id="p-res" hidden>
+    <div class="eyebrow">Results</div>
+    <div id="resBody"></div>
+    <h3>The types, for reference</h3>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Type</th><th>Affected cone</th><th>What it's like</th><th>Prevalence</th></tr></thead>
+      <tbody id="typeTable"></tbody>
+    </table></div>
+    <p class="note">Prevalence figures are for people of Northern European descent; red-green types are X-linked, so they're about 20 times rarer in women. Tritan types are not sex-linked.</p>
+  </section>
+</div>
+
+<script>
+(()=>{
+const $=s=>document.querySelector(s);
+const rnd=n=>Math.floor(Math.random()*n);
+const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
+function norm180(a){while(a>90)a-=180;while(a<=-90)a+=180;return a}
+
+/* ---------- color science ---------- */
+const M2RGB=[[3.2404542,-1.5371385,-0.4985314],[-0.9692660,1.8760108,0.0415560],[0.0556434,-0.2040259,1.0572252]];
+const mul=(m,v)=>m.map(r=>r[0]*v[0]+r[1]*v[1]+r[2]*v[2]);
+const enc=c=>{c=Math.min(1,Math.max(0,c));return c<=0.0031308?12.92*c:1.055*Math.pow(c,1/2.4)-0.055};
+const dec=c=>c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4);
+const css=l=>`rgb(${l.map(c=>Math.round(enc(c)*255)).join(",")})`;
+const hex2lin=h=>[1,3,5].map(i=>dec(parseInt(h.slice(i,i+2),16)/255));
+const inGamut=l=>l.every(c=>c>=-0.002&&c<=1.002);
+const WN={u:0.19784,v:0.46832}; // D65 white in CIE 1976 u'v'
+const uvY=(u,v,Y)=>mul(M2RGB,[Y*9*u/(4*v),Y,Y*(12-3*u-20*v)/(4*v)]);
+const luv=(L,u,v)=>uvY(u/(13*L)+WN.u,v/(13*L)+WN.v,Math.pow((L+16)/116,3));
+
+const AXES=["protan","deutan","tritan"];
+const LABEL={protan:"Protan · red",deutan:"Deutan · green",tritan:"Tritan · blue"};
+// copunctal points: every confusion line of a dichromat passes through one of these
+const COP={protan:[0.678,0.501],deutan:[-1.217,0.782],tritan:[0.257,0.0]};
+const YL=[0.10,0.13,0.16,0.19,0.22,0.25,0.28]; // luminance noise levels
+const AX={};
+for(const k of AXES){
+  let du=COP[k][0]-WN.u,dv=COP[k][1]-WN.v;const n=Math.hypot(du,dv);du/=n;dv/=n;
+  let best={s:1,d:0};
+  for(const s of [1,-1]){let d=0;while(d<0.12&&YL.every(Y=>inGamut(uvY(WN.u+s*(d+0.001)*du,WN.v+s*(d+0.001)*dv,Y))))d+=0.001;if(d>best.d)best={s,d}}
+  AX[k]={du,dv,ang:norm180(Math.atan2(dv,du)*180/Math.PI),sign:best.s,dmax:best.d};
+}
+const NORM={protan:0.011,deutan:0.011,tritan:0.018}; // generous upper limits of normal for an uncalibrated screen
+
+/* ---------- tabs ---------- */
+const panels={gap:$("#p-gap"),arr:$("#p-arr"),match:$("#p-match"),res:$("#p-res")};
+function show(step){
+  for(const k in panels){panels[k].hidden=k!==step;$("#tab-"+k).setAttribute("aria-selected",k===step)}
+  if(step==="res")renderResults();
+}
+document.querySelectorAll("nav.steps button").forEach(b=>b.addEventListener("click",()=>show(b.dataset.step)));
+const setStatus=(k,t)=>{$("#st-"+k).textContent=t};
+
+/* ---------- test 1: gap ---------- */
+const cv=$("#gapCanvas"),S=400;
+function pack(){
+  const dots=[];
+  for(let t=0;t<6000;t++){
+    const r=3.5+Math.random()*7,x=r+Math.random()*(S-2*r),y=r+Math.random()*(S-2*r);
+    let ok=true;for(const d of dots){const dx=d.x-x,dy=d.y-y,m=d.r+r+1.6;if(dx*dx+dy*dy<m*m){ok=false;break}}
+    if(ok)dots.push({x,y,r});
+  }
+  return dots;
+}
+const GAPV=[[0,-1],[1,0],[0,1],[-1,0]];
+function drawC(k,d,gap){
+  const dpr=Math.min(2,window.devicePixelRatio||1);cv.width=S*dpr;cv.height=S*dpr;
+  const c=cv.getContext("2d");c.setTransform(dpr,0,0,dpr,0,0);c.fillStyle="#2e2e2e";c.fillRect(0,0,S,S);
+  if(k==null)return;
+  const a=AX[k],g=GAPV[gap];
+  for(const p of pack()){
+    const dx=p.x-200,dy=p.y-200,rho=Math.hypot(dx,dy);
+    let t=rho>=88&&rho<=152;
+    if(t&&dx*g[0]+dy*g[1]>0&&Math.abs(dx*g[1]-dy*g[0])<30)t=false;
+    const s=t?d*a.sign:0,Y=YL[rnd(YL.length)];
+    c.fillStyle=css(uvY(WN.u+s*a.du,WN.v+s*a.dv,Y));c.beginPath();c.arc(p.x,p.y,p.r,0,7);c.fill();
+  }
+}
+drawC("deutan",AX.deutan.dmax*0.9,1);
+
+const DMIN=0.0015,NLV=14,MAXT=22;
+const G={stairs:null,cur:null,busy:false,running:false,result:null,n:0};
+const ansBtns=[0,1,2,3].map(i=>$("#ans-"+i));
+function enableAns(on){ansBtns.forEach(b=>b.disabled=!on);$("#ans-none").disabled=!on}
+function startGap(){
+  G.stairs={};G.n=0;G.result=null;
+  for(const k of AXES){const lv=[];for(let i=0;i<NLV;i++)lv.push(DMIN*Math.pow(AX[k].dmax/DMIN,i/(NLV-1)));
+    G.stairs[k]={lv,idx:NLV-4,trials:0,rev:[],last:0,topMiss:0,ceil:false,done:false}}
+  G.running=true;$("#gapStart").hidden=true;$("#gapResult").hidden=true;$("#gapTag").textContent="Test running";
+  setStatus("gap","1 · in progress");enableAns(true);nextTrial();
+}
+function nextTrial(){
+  const open=AXES.filter(k=>!G.stairs[k].done);
+  if(!open.length)return finishGap();
+  const k=open[rnd(open.length)],gap=rnd(4),s=G.stairs[k];
+  G.cur={k,gap};drawC(k,s.lv[s.idx],gap);G.busy=false;
+  const prog=AXES.reduce((a,x)=>a+(G.stairs[x].done?MAXT:G.stairs[x].trials),0)/(MAXT*3);
+  $("#gapBar").style.width=(prog*100).toFixed(1)+"%";
+  $("#gapStatus").textContent=`Trial ${G.n+1}`;
+}
+function step(s,correct){
+  s.trials++;const dir=correct?-1:1;
+  if(s.last&&dir!==s.last)s.rev.push(s.idx);
+  s.last=dir;
+  if(!correct&&s.idx===NLV-1&&++s.topMiss>=2){s.ceil=true;s.done=true;return}
+  s.idx=Math.max(0,Math.min(NLV-1,s.idx+dir*(s.rev.length?1:2)));
+  if(s.rev.length>=6||s.trials>=MAXT)s.done=true;
+}
+function answer(a){
+  if(!G.running||G.busy||!G.cur)return;G.busy=true;G.n++;
+  step(G.stairs[G.cur.k],a===G.cur.gap);
+  drawC(null);setTimeout(nextTrial,220);
+}
+ansBtns.forEach(b=>b.addEventListener("click",()=>answer(+b.dataset.dir)));
+$("#ans-none").addEventListener("click",()=>answer(-1));
+document.addEventListener("keydown",e=>{
+  if(panels.gap.hidden||!G.running)return;
+  const m={ArrowUp:0,ArrowRight:1,ArrowDown:2,ArrowLeft:3," ":-1}[e.key];
+  if(m!==undefined){e.preventDefault();answer(m)}
+});
+$("#gapStart").addEventListener("click",startGap);
+
+const thr=s=>{if(s.ceil)return s.lv[NLV-1];const r=s.rev.slice(-4);if(!r.length)return s.lv[s.idx];return Math.exp(r.reduce((a,i)=>a+Math.log(s.lv[i]),0)/r.length)};
+function finishGap(){
+  G.running=false;enableAns(false);drawC(null);
+  const t={},ceil={};for(const k of AXES){t[k]=thr(G.stairs[k]);ceil[k]=G.stairs[k].ceil||t[k]>=AX[k].dmax*0.8}
+  G.result={t,ceil,cls:classifyGap(t,ceil)};
+  $("#gapBar").style.width="100%";$("#gapStatus").textContent=`Done · ${G.n} trials`;
+  $("#gapTag").textContent="Finished";
+  $("#gapStart").hidden=false;$("#gapStart").textContent="Run test 1 again";
+  setStatus("gap","1 · done");renderGapResult();
+}
+function classifyGap(t,ceil){
+  const e={};for(const k of AXES)e[k]=t[k]/NORM[k];
+  const rg=Math.max(e.protan,e.deutan);
+  if(rg<1&&e.tritan<1)return{type:"normal",sev:"none"};
+  if(rg<1)return{type:"tritan",sev:sevOf(t.tritan,ceil.tritan)};
+  if(e.tritan>=1.5&&Math.min(e.protan,e.deutan)>=1.5&&e.tritan>rg*0.7)return{type:"general",sev:"—"};
+  const ratio=t.protan/t.deutan;
+  const type=ratio>1.2?"protan":ratio<1/1.2?"deutan":"rg";
+  return{type,sev:sevOf(Math.max(t.protan,t.deutan),ceil.protan||ceil.deutan)};
+}
+function sevOf(x,c){return c?"ceiling":x>0.045?"strong":x>0.02?"moderate":"mild"}
+const u4=x=>Math.round(x*1e4); // u'v' × 10⁻⁴, the unit used in the clinical literature
+function renderGapResult(){
+  const {t,ceil,cls}=G.result,lo=10e-4,hi=1500e-4,pos=x=>Math.max(0,Math.min(100,Math.log(x/lo)/Math.log(hi/lo)*100));
+  const rows=AXES.map(k=>`<div class="crow"><span><b>${LABEL[k]}</b></span>
+    <div class="track"><div class="norm" style="width:${pos(NORM[k])}%"></div><div class="lim" style="left:${pos(AX[k].dmax)}%"></div><div class="mark" style="left:${pos(t[k])}%"></div></div>
+    <span class="mono">${u4(t[k])}${ceil[k]?"+":""}</span></div>`).join("");
+  const ticks=[10,30,100,300,1000].map(v=>`<span style="left:${pos(v*1e-4)}%">${v}</span>`).join("");
+  $("#gapResult").innerHTML=`<div class="chart"><h3>Your color thresholds</h3>
+    <p style="color:var(--muted)">Smallest color difference you could reliably see along each confusion line, in u′v′ × 10⁻⁴. Lower is better. A “+” means you hit the most saturated color this screen can show.</p>
+    ${rows}<div class="crow"><span></span><div class="axis">${ticks}</div><span></span></div>
+    <div class="legend"><span><i style="background:var(--line)"></i>Normal range</span><span><i style="border-left:2px dashed var(--muted);height:12px;width:0"></i>Screen limit</span><span><i style="background:var(--ink);width:4px"></i>You</span></div>
+    <p><b>Reading:</b> ${gapText(cls)}</p></div>`;
+  $("#gapResult").hidden=false;
+}
+function gapText(c){
+  return{normal:"all three axes are in the normal range.",
+    tritan:`only the blue-yellow (tritan) axis is raised, severity ${c.sev}.`,
+    protan:`red-green is raised and the red (protan) axis is worse than green, which points to a protan defect. Severity: ${c.sev}.`,
+    deutan:`red-green is raised and the green (deutan) axis is worse than red, which points to a deutan defect. Severity: ${c.sev}.`,
+    rg:`red-green is raised but red and green axes are about equal, so this test can't split protan from deutan. Severity: ${c.sev}. Tests 2 and 3 can break the tie.`,
+    general:"all three axes are raised. That's more often the screen, room lighting, or attention than a cone defect. Try again with filters off."}[c.type];
+}
+
+/* ---------- test 2: hue order ---------- */
+const caps=[];
+(()=>{
+  const hs=[...Array(16)].map((_,i)=>250-i*310/15); // blue → green → yellow → red → purple, in CIELUV hue
+  let C=44,set;
+  for(;C>15;C--){set=hs.map(h=>{const r=h*Math.PI/180,u=C*Math.cos(r),v=C*Math.sin(r);return{u,v,lin:luv(60,u,v)}});if(set.every(c=>inGamut(c.lin)))break}
+  set.forEach((c,i)=>caps.push({id:i,u:c.u,v:c.v,css:css(c.lin)}));
+})();
+const A={placed:[0],tray:[],result:null};
+function resetArr(){A.placed=[0];A.tray=shuffle([...Array(15)].map((_,i)=>i+1));A.result=null;$("#arrResult").hidden=true;renderArr()}
+function capBtn(id,where,numbered){
+  const b=document.createElement("button");b.className="cap"+(id===0?" ref":"");b.style.background=caps[id].css;
+  b.id=`cap-${where}-${id}`;b.setAttribute("aria-label",id===0?"Reference cap":"Color cap");
+  if(numbered){const n=document.createElement("span");n.className="n";n.textContent=id===0?"P":id;b.appendChild(n)}
+  if(id===0){b.disabled=true}
+  else b.addEventListener("click",()=>{
+    if(where==="tray"){A.tray=A.tray.filter(x=>x!==id);A.placed.push(id)}
+    else{A.placed=A.placed.filter(x=>x!==id);A.tray.push(id)}
+    if(A.result){A.result=null;$("#arrResult").hidden=true;setStatus("arr","2 · in progress")}
+    renderArr();
+  });
+  return b;
+}
+function renderArr(){
+  const row=$("#capRow"),tray=$("#capTray"),num=!!A.result;
+  row.replaceChildren(...A.placed.map(id=>capBtn(id,"row",num)));row.classList.toggle("numbered",num);
+  for(let i=A.placed.length;i<16;i++){const s=document.createElement("span");s.className="slot";row.appendChild(s)}
+  tray.replaceChildren(...A.tray.map(id=>capBtn(id,"tray",false)));
+  $("#arrScore").disabled=A.tray.length>0;
+  if(A.placed.length>1&&!A.result)setStatus("arr","2 · in progress");
+}
+function vks(seq){ // Vingrys & King-Smith (1988) moment-of-inertia analysis
+  let su=0,sv=0,suv=0;
+  for(let i=1;i<seq.length;i++){const a=caps[seq[i-1]],b=caps[seq[i]],du=b.u-a.u,dv=b.v-a.v;su+=du*du;sv+=dv*dv;suv+=du*dv}
+  const n=seq.length-1,h=(su-sv)/2,r=Math.hypot(h,suv),m=(su+sv)/2;
+  return{ang:norm180(0.5*Math.atan2(2*suv,su-sv)*180/Math.PI),maj:Math.sqrt((m+r)/n),min:Math.sqrt(Math.max(m-r,1e-9)/n)};
+}
+function scoreArr(){
+  const seq=A.placed,v=vks(seq),perf=vks([...Array(16).keys()]);
+  const C=v.maj/perf.maj,Sx=v.maj/v.min;
+  let cross=0;for(let i=1;i<seq.length;i++)if(Math.abs(seq[i]-seq[i-1])>=4)cross++;
+  let type="normal",near=null;
+  if(C>=1.6){
+    const dist=k=>{const d=Math.abs(norm180(v.ang-AX[k].ang));return d};
+    near=AXES.slice().sort((a,b)=>dist(a)-dist(b))[0];type=near;
+  }
+  A.result={seq:seq.slice(),ang:v.ang,C,S:Sx,cross,type};
+  setStatus("arr","2 · done");renderArr();renderArrResult();
+}
+function renderArrResult(){
+  const r=A.result,sc=1.9,P=c=>[(c.u*sc).toFixed(1),(-c.v*sc).toFixed(1)];
+  const axisLines=AXES.map(k=>{const a=AX[k].ang*Math.PI/180,L=118,x=Math.cos(a)*L,y=-Math.sin(a)*L;
+    return `<line x1="${-x}" y1="${-y}" x2="${x}" y2="${y}" stroke="var(--muted)" stroke-dasharray="3 4" stroke-width="1"/><text x="${(x*1.07).toFixed(1)}" y="${(y*1.07+4).toFixed(1)}" fill="var(--muted)" font-size="11" font-family="JetBrains Mono,monospace" text-anchor="middle">${k[0].toUpperCase()}</text>`}).join("");
+  const path=r.seq.map(i=>P(caps[i]).join(",")).join(" ");
+  const dots=caps.map(c=>{const [x,y]=P(c);return `<circle cx="${x}" cy="${y}" r="${c.id===0?7:5.5}" fill="${c.css}" stroke="var(--ink)" stroke-width="${c.id===0?2:0.8}"/>`}).join("");
+  const verdict=r.type==="normal"
+    ?"Your order follows the color circle closely. That's typical for normal vision, and also for many mild anomalous trichromats, since this test only catches moderate and strong defects."
+    :`Your jumps line up best with the <b>${r.type}</b> confusion axis (P, D or T in the diagram). Protan and deutan axes are only about 16° apart, so a protan/deutan call from this test alone is soft; test 1 is better at that split.`;
+  $("#arrResult").innerHTML=`<div class="split">
+    <div class="diagram"><svg viewBox="-135 -135 270 270" role="img" aria-label="Your cap order drawn on the color circle">
+      ${axisLines}<polyline points="${path}" fill="none" stroke="var(--ink)" stroke-width="1.6" stroke-linejoin="round"/>${dots}</svg></div>
+    <div style="display:grid;gap:1rem;min-width:0">
+      <h3>Your arrangement</h3>
+      <dl class="stats">
+        <dt>Order</dt><dd>${r.seq.map(i=>i===0?"P":i).join(" ")}</dd>
+        <dt>Major crossings</dt><dd>${r.cross}</dd>
+        <dt>Confusion index</dt><dd>${r.C.toFixed(2)} <span style="color:var(--muted)">(1.00 is perfect, ≥1.6 is a defect)</span></dd>
+        <dt>Selectivity</dt><dd>${r.S.toFixed(2)}</dd>
+        <dt>Confusion angle</dt><dd>${r.ang.toFixed(1)}° <span style="color:var(--muted)">(P ${AX.protan.ang.toFixed(0)}°, D ${AX.deutan.ang.toFixed(0)}°, T ${AX.tritan.ang.toFixed(0)}°)</span></dd>
+      </dl>
+      <p>${verdict}</p>
+    </div></div>`;
+  $("#arrResult").hidden=false;
+}
+$("#arrScore").addEventListener("click",scoreArr);
+$("#arrReset").addEventListener("click",()=>{resetArr();setStatus("arr","2 · not started")});
+resetArr();
+
+/* ---------- test 3: match ---------- */
+// Machado, Oliveira & Fernandes (2009), severity 1.0, applied in linear RGB
+const MAT={protan:[[0.152286,1.052583,-0.204868],[0.114503,0.786281,0.099216],[-0.003882,-0.048116,1.051998]],
+  deutan:[[0.367322,0.860646,-0.227968],[0.280085,0.672501,0.047413],[-0.011820,0.042940,0.968881]],
+  tritan:[[1.255528,-0.076749,-0.178779],[-0.078411,0.930809,0.147602],[0.004733,0.691367,0.303900]]};
+const SW=["#c8312b","#e07b24","#d9b92e","#93a53a","#3f9a4a","#2a9d8f","#3b7dc4","#6a4fb3","#b5479a","#e58fa6","#8a5a3b","#7a7a7a"];
+const M={order:shuffle(AXES.slice()),ratings:{},result:null};
+const stripHTML=f=>SW.map(h=>`<i style="background:${f(h)}"></i>`).join("");
+$("#refStrip").innerHTML=stripHTML(h=>h);
+const RATE=[["same","Identical"],["close","Slightly different"],["diff","Clearly different"]];
+$("#cands").innerHTML=M.order.map((k,i)=>{const L="ABC"[i];
+  return `<div class="cand"><span class="letter">${L}</span><div class="strip">${stripHTML(h=>css(mul(MAT[k],hex2lin(h))))}</div>
+  <div class="seg" role="radiogroup" aria-label="Strip ${L}">${RATE.map(([v,t])=>`<label for="m-${L}-${v}"><input type="radio" id="m-${L}-${v}" name="m-${L}" value="${v}" data-k="${k}">${t}</label>`).join("")}</div></div>`}).join("");
+$("#cands").addEventListener("change",e=>{
+  const i=e.target;if(i.type!=="radio")return;M.ratings[i.dataset.k]=i.value;
+  setStatus("match","3 · in progress");
+  if(Object.keys(M.ratings).length===3)scoreMatch();
+});
+function scoreMatch(){
+  const R=M.ratings,same=AXES.filter(k=>R[k]==="same"),close=AXES.filter(k=>R[k]==="close");
+  let res;
+  if(same.length===1)res={type:same[0],kind:"dichromat"};
+  else if(same.length===2&&!same.includes("tritan"))res={type:"rg",kind:"dichromat"};
+  else if(same.length>1)res={type:"unclear",kind:""};
+  else if(close.length===1)res={type:close[0],kind:"anomalous"};
+  else if(close.length===2&&!close.includes("tritan"))res={type:"rg",kind:"anomalous"};
+  else if(!close.length)res={type:"normal",kind:""};
+  else res={type:"unclear",kind:""};
+  M.result=res;setStatus("match","3 · done");
+  const letter=k=>"ABC"[M.order.indexOf(k)];
+  const key=AXES.map(k=>`${letter(k)} = ${k}anopia`).join(" · ");
+  const txt={normal:"All three strips look different to you, which is what normal color vision sees.",
+    unclear:"Your ratings don't single out one type. That's fine; tests 1 and 2 carry more weight.",
+    rg:res.kind==="dichromat"?"Both red-green strips look identical to you, which fits a strong red-green defect.":"Both red-green strips look only slightly off, which fits a red-green defect of uncertain type."}[res.type]
+    ||(res.kind==="dichromat"?`Strip ${letter(res.type)} (${res.type}anopia) looks identical to you. That's a strong sign of ${res.type}anopia or a severe ${res.type}anomaly.`
+      :`Strip ${letter(res.type)} (${res.type}anopia) is the closest match, which fits a milder ${res.type} anomaly.`);
+  $("#matchResult").innerHTML=`<p><b>Reading:</b> ${txt}</p><p class="mono" style="font-size:.85rem;color:var(--muted)">${key}</p>`;
+  $("#matchResult").hidden=false;
+}
+
+/* ---------- results ---------- */
+const TYPES=[
+  ["protanomaly","Protanomaly","L (red)","Reds look duller and darker; red, orange, brown and green can blur together.","~1% of men"],
+  ["protanopia","Protanopia","L (red), missing","Red looks very dark, nearly black; red and green are hard to tell apart.","~1% of men"],
+  ["deuteranomaly","Deuteranomaly","M (green)","Greens and reds shift toward each other; the most common type.","~5% of men"],
+  ["deuteranopia","Deuteranopia","M (green), missing","Red and green look alike, but red keeps its brightness.","~1% of men"],
+  ["tritanomaly","Tritanomaly","S (blue)","Blue and green, and yellow and pink, are harder to separate.","~1 in 10,000"],
+  ["tritanopia","Tritanopia","S (blue), missing","Blue looks green, yellow looks pale pink or gray.","~1 in 10,000"],
+];
+function renderResults(){
+  const g=G.result?.cls,a=A.result,m=M.result;
+  if(!g&&!a&&!m){$("#resBody").innerHTML=`<div class="verdict"><span class="eyebrow">No tests yet</span><div class="big">Take at least test 1 to get a result.</div><p>Test 1 is the most informative. Tests 2 and 3 confirm the type and help tell a missing cone (“-opia”) from a shifted one (“-anomaly”).</p></div>`;$("#typeTable").innerHTML=typeRows(null);return}
+  const votes={protan:0,deutan:0,tritan:0,normal:0};
+  if(g&&votes[g.type]!=null)votes[g.type]+=2;
+  if(a&&votes[a.type]!=null)votes[a.type]+=1;
+  if(m&&votes[m.type]!=null)votes[m.type]+=1;
+  let type;
+  if(g&&["protan","deutan","tritan","normal"].includes(g.type))type=g.type;
+  else{const top=Object.entries(votes).sort((x,y)=>y[1]-x[1]);type=top[0][1]>0&&top[0][1]>top[1][1]?top[0][0]:null}
+  const rgHint=(g?.type==="rg"||m?.type==="rg");
+  if(!type&&rgHint)type="rg";
+  if(!type&&g?.type==="general")type="general";
+  const strong=(g&&["strong","ceiling"].includes(g.sev))||(m&&m.kind==="dichromat"&&(m.type===type||m.type==="rg"));
+  const sure=(g&&g.sev==="ceiling")&&(m&&m.kind==="dichromat");
+  let head,hit=null,body;
+  const sevWord=g&&g.sev&&!["none","—"].includes(g.sev)?g.sev:null;
+  if(type==="normal"){head="Normal color vision on this screen";body="None of the tests found a clear defect. If you've failed Ishihara plates before, your deficiency may be mild enough that an uncalibrated screen misses it; an anomaloscope would settle it."}
+  else if(type==="general"){head="No clear type yet";body="Your thresholds were raised on every axis, which usually means the screen, a blue-light filter or room lighting is interfering. Turn filters off and retake test 1."}
+  else if(type==="rg"){head="Red-green deficiency, type unclear";body="You clearly have a red-green defect, but these tests couldn't split protan from deutan. Statistically, deutan (green) is about three times more common. Retaking test 1 can sharpen the split."}
+  else{
+    const name={protan:["protanomaly","protanopia","red (L)"],deutan:["deuteranomaly","deuteranopia","green (M)"],tritan:["tritanomaly","tritanopia","blue (S)"]}[type];
+    if(sure){head=name[1][0].toUpperCase()+name[1].slice(1);hit=name[1];body=`Your ${name[2]} cones appear to be missing or nonfunctional: you reached the screen's color limit on that axis and saw the ${type}anopia simulation as identical.`}
+    else if(strong){head=`Strong ${name[0]}, possibly ${name[1]}`;hit=name[0];body=`Your ${name[2]} cones are strongly affected. Telling severe ${name[0]} from ${name[1]} needs an anomaloscope; the screen can't show colors saturated enough.`}
+    else{head=name[0][0].toUpperCase()+name[0].slice(1)+(sevWord?` (${sevWord})`:"");hit=name[0];body=`Your ${name[2]} cones work but are shifted in sensitivity, so colors along the ${type} confusion line look more alike to you than to most people.`}
+  }
+  const agree=[g&&["protan","deutan","tritan","normal"].includes(g.type)?g.type:null,a?.type,m&&["protan","deutan","tritan","normal"].includes(m.type)?m.type:null].filter(Boolean);
+  const nAgree=agree.filter(x=>x===type).length,nTests=[g,a,m].filter(Boolean).length;
+  const ev=[
+    ["1 · Find the gap",g?`${gapText(g)} <span class="mono">(P ${u4(G.result.t.protan)} · D ${u4(G.result.t.deutan)} · T ${u4(G.result.t.tritan)})</span>`:"Not taken."],
+    ["2 · Hue order",a?(a.type==="normal"?`Passed (confusion index ${a.C.toFixed(2)}).`:`Points to <b>${a.type}</b> (angle ${a.ang.toFixed(0)}°, index ${a.C.toFixed(2)}).`):"Not taken."],
+    ["3 · Match",m?(m.type==="normal"?"No strip looked identical.":m.type==="unclear"?"Inconclusive.":`Closest: <b>${m.type==="rg"?"red-green (both)":m.type}</b>, ${m.kind==="dichromat"?"rated identical":"rated slightly different"}.`):"Not taken."]];
+  $("#resBody").innerHTML=`<div class="verdict"><span class="eyebrow">Most likely · ${nAgree} of ${nTests} test${nTests>1?"s":""} agree</span><div class="big">${head}</div><p>${body}</p></div>
+    <div class="evidence">${ev.map(([k,v])=>`<div><b>${k}</b><span>${v}</span></div>`).join("")}</div>`;
+  $("#typeTable").innerHTML=typeRows(hit);
+}
+const typeRows=hit=>TYPES.map(t=>`<tr class="${t[0]===hit?"hit":""}"><td><b>${t[1]}</b></td><td>${t[2]}</td><td>${t[3]}</td><td class="mono">${t[4]}</td></tr>`).join("");
+renderResults();
+})();
+</script>
