@@ -152,6 +152,15 @@ dl.stats dd{margin:0;font-family:var(--f-mono);font-variant-numeric:tabular-nums
 .seg label:has(input:checked){background:#e6e6e6;color:#151515}
 
 /* results */
+/* giving: a quiet closing section, not a call to action */
+.give{border-top:1px solid var(--line);padding-top:1.5rem;display:grid;gap:.9rem}
+.give .orgs{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.give .org{border:1px solid var(--line);border-radius:6px;padding:1rem;display:grid;gap:.45rem;align-content:start;background:var(--surface)}
+.give .org b{font-family:var(--f-display);font-size:1.05rem}
+.give .org p{font-size:.95rem}
+.give .org a{font-weight:700;color:var(--ink);text-underline-offset:3px}
+.give .org a:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+@media (max-width:560px){.give .orgs{grid-template-columns:1fr}}
 .verdict{border:2px solid var(--ink);border-radius:6px;padding:1.4rem;display:grid;gap:.7rem;background:var(--surface)}
 .verdict .big{font-family:var(--f-display);font-weight:700;font-size:clamp(1.7rem,4.5vw,2.4rem);line-height:1.1;text-wrap:balance}
 .evidence{display:grid;gap:0;border-top:1px solid var(--line)}
@@ -380,6 +389,15 @@ tr.hit td:first-child{box-shadow:inset 4px 0 0 var(--ink)}
       <tbody id="typeTable"></tbody>
     </table></div>
     <p class="note">Prevalence figures are for people of Northern European descent; red-green types are X-linked, so they're about 20 times rarer in women. Tritan types are not sex-linked.</p>
+  <section class="give" aria-labelledby="give-h">
+    <h3 id="give-h">Help prevent blindness</h3>
+    <p>Color blindness can't be cured, but most blindness worldwide can be prevented or treated cheaply. If you'd like to help, these two charities do this work well:</p>
+    <div class="orgs">
+      <div class="org"><b>The Fred Hollows Foundation</b><p>Restores sight with low-cost cataract surgery and trains local eye surgeons in Africa, Asia and the Pacific.</p><a href="https://www.hollows.org/donate/" target="_blank" rel="noopener noreferrer">Donate to Fred Hollows ↗</a></div>
+      <div class="org"><b>Helen Keller Intl</b><p>Prevents childhood blindness and death with vitamin A supplements. Rated a top charity by GiveWell.</p><a href="https://helenkellerintl.org/donate/" target="_blank" rel="noopener noreferrer">Donate to Helen Keller Intl ↗</a></div>
+    </div>
+    <p class="note">This site isn't affiliated with either charity and receives nothing from donations. Links go straight to each charity's own donation page, with no tracking codes.</p>
+  </section>
   </section>
 </div>
 
