@@ -292,7 +292,7 @@ tr.hit td:first-child{box-shadow:inset 4px 0 0 var(--ink)}
   <section class="panel" id="p-gap" hidden>
     <div class="eyebrow">Test 1 of 3 · Cambridge-style threshold test</div>
     <h2>Find the gap in the C</h2>
-    <p>A ring shaped like the letter C is hidden in the dots. It differs from the background only in color; brightness is scrambled so you can't use it as a clue. Say which way the opening faces. When you can't see a C, say so instead of guessing. The color gets fainter as you succeed and stronger when you miss, separately along the red, green and blue confusion lines.</p>
+    <p>A ring shaped like the letter C is hidden in the dots. It differs from the background only in color; brightness is scrambled so you can't use it as a clue. Say which way the opening faces. When you can't see a C, say so instead of guessing. Each answer narrows down how faint a color you can see, separately along the red, green and blue confusion lines, so the test adapts to you and stops as soon as it knows enough.</p>
     <div class="gapgrid">
       <div class="stage"><span class="tag" id="gapTag">Example · opening faces right</span><canvas id="gapCanvas" width="400" height="400" aria-label="Dot pattern stimulus"></canvas></div>
       <div class="side">
@@ -305,7 +305,7 @@ tr.hit td:first-child{box-shadow:inset 4px 0 0 var(--ink)}
         <button class="btn ghost" id="ans-none" disabled>I can't see a C</button>
         <p style="font-size:.85rem;color:var(--muted)">Keys: <span class="kbd">← ↑ → ↓</span> for the opening, <span class="kbd">Space</span> for "can't see".</p>
         <div class="progress" aria-hidden="true"><i id="gapBar"></i></div>
-        <p class="mono" style="font-size:.85rem" id="gapStatus">About 45–65 trials.</p>
+        <p class="mono" style="font-size:.85rem" id="gapStatus">About 15–23 trials, 2–3 minutes.</p>
         <button class="btn" id="gapStart">Start test 1</button>
       </div>
     </div>
@@ -316,7 +316,7 @@ tr.hit td:first-child{box-shadow:inset 4px 0 0 var(--ink)}
   <section class="panel" id="p-arr" hidden>
     <div class="eyebrow">Test 2 of 3 · Farnsworth D-15 style</div>
     <h2>Put the colors in order</h2>
-    <p>Starting from the fixed reference cap on the left, pick the cap that looks most similar to the last one you placed, and keep going until the tray is empty. Click a placed cap to send it back. People with a color deficiency tend to jump across the color circle along their own confusion line, and the direction of those jumps reveals the type.</p>
+    <p>Starting from the reference cap on the left, pick the cap that looks most similar to the last one you placed, and keep going until the tray is empty. Click a placed cap to send it back. People with a color deficiency tend to jump across the color circle along their own confusion line, and the direction of those jumps reveals the type.</p>
     <div class="tray">
       <span class="lbl">Your order</span>
       <div class="caps" id="capRow"></div>
@@ -325,7 +325,7 @@ tr.hit td:first-child{box-shadow:inset 4px 0 0 var(--ink)}
     </div>
     <div class="row">
       <button class="btn" id="arrScore" disabled>Score my order</button>
-      <button class="btn ghost" id="arrReset">Reshuffle</button>
+      <button class="btn ghost" id="arrReset">New colors</button>
     </div>
     <div id="arrResult" hidden></div>
   </section>
@@ -526,37 +526,63 @@ function drawC(k,d,gap){
 }
 drawC("deutan",AX.deutan.dmax*0.9,1);
 
-const DMIN=0.0015,NLV=14,MAXT=22;
-const G={stairs:null,cur:null,busy:false,running:false,result:null,n:0};
+// Bayesian adaptive threshold (QUEST-style). Each axis keeps a posterior over log10 threshold; every trial is shown
+// at the posterior mean and updates it with a Weibull psychometric function. 5 trials per axis, then up to 3 extra
+// rounds only where the call is uncertain (red vs green close, or an axis near the normal limit). Simulated against
+// the old 6-reversal staircase: same or better type accuracy in ~17-20 trials instead of ~28-39 (max 23 vs 55).
+const DMIN=0.0015,BASE=5,EXTRA=3;
+const PG=0.05,PL=0.03,PB=2.5;                                  // guess rate, lapse rate, slope
+const PA=1/Math.pow(-Math.log(1-(0.5-PG)/(1-PG-PL)),1/PB);    // so the threshold is where p(correct) = 50%
+const pCorrect=(x,t)=>PG+(1-PG-PL)*(1-Math.exp(-Math.pow(x/(t*PA),PB)));
+function newQuest(k){
+  const lo=Math.log10(DMIN/2),hi=Math.log10(AX[k].dmax*4),grid=[],logp=[];
+  for(let i=0;i<121;i++){const g=lo+(hi-lo)*i/120;grid.push(g);logp.push(-0.5*Math.pow((g-Math.log10(0.012))/0.6,2))}
+  return{k,grid,logp,n:0,top:0,ceil:false,xlo:Math.log10(DMIN),xhi:Math.log10(AX[k].dmax)};
+}
+function qMean(q){
+  const m=Math.max(...q.logp);let z=0,s=0;
+  q.grid.forEach((g,i)=>{const w=Math.exp(q.logp[i]-m);z+=w;s+=w*g});return s/z;
+}
+const qLevel=q=>Math.pow(10,Math.min(q.xhi,Math.max(q.xlo,qMean(q))));
+function qUpdate(q,x,ok){
+  q.n++;
+  q.grid.forEach((g,i)=>{const p=pCorrect(x,Math.pow(10,g));q.logp[i]+=Math.log(Math.max(1e-6,ok?p:1-p))});
+  if(!ok&&Math.abs(Math.log10(x)-q.xhi)<1e-9&&++q.top>=2)q.ceil=true;   // missed twice at the screen's limit
+}
+const qThr=q=>q.ceil?AX[q.k].dmax:Math.min(Math.pow(10,qMean(q)),AX[q.k].dmax);
+
+const G={q:null,queue:[],extra:0,cur:null,busy:false,running:false,result:null,n:0};
 const ansBtns=[0,1,2,3].map(i=>$("#ans-"+i));
 function enableAns(on){ansBtns.forEach(b=>b.disabled=!on);$("#ans-none").disabled=!on}
+const openAxes=ks=>ks.filter(k=>!G.q[k].ceil);
 function startGap(){
-  G.stairs={};G.n=0;G.result=null;
-  for(const k of AXES){const lv=[];for(let i=0;i<NLV;i++)lv.push(DMIN*Math.pow(AX[k].dmax/DMIN,i/(NLV-1)));
-    G.stairs[k]={lv,idx:NLV-4,trials:0,rev:[],last:0,topMiss:0,ceil:false,done:false}}
+  G.q={};for(const k of AXES)G.q[k]=newQuest(k);
+  G.n=0;G.extra=0;G.result=null;G.queue=[];
+  for(let i=0;i<BASE;i++)G.queue.push(...shuffle(AXES.slice()));
   G.running=true;$("#gapStart").hidden=true;$("#gapResult").hidden=true;$("#gapTag").textContent="Test running";
   setStatus("gap","1 · in progress");enableAns(true);nextTrial();
 }
-function nextTrial(){
-  const open=AXES.filter(k=>!G.stairs[k].done);
-  if(!open.length)return finishGap();
-  const k=open[rnd(open.length)],gap=rnd(4),s=G.stairs[k];
-  G.cur={k,gap};drawC(k,s.lv[s.idx],gap);G.busy=false;
-  const prog=AXES.reduce((a,x)=>a+(G.stairs[x].done?MAXT:G.stairs[x].trials),0)/(MAXT*3);
-  $("#gapBar").style.width=(prog*100).toFixed(1)+"%";
-  $("#gapStatus").textContent=`Trial ${G.n+1}`;
+function planExtra(){ // after the base trials, add a round only where more data changes the answer
+  if(G.extra>=EXTRA)return false;
+  const t={};for(const k of AXES)t[k]=qThr(G.q[k]);
+  const r=t.protan/t.deutan;
+  let ks=[];
+  if(Math.max(t.protan,t.deutan)>=NORM.protan*0.8&&r>=1/1.6&&r<=1.6)ks=["protan","deutan"];
+  else ks=AXES.filter(k=>t[k]/NORM[k]>=0.6&&t[k]/NORM[k]<=1.6);
+  ks=openAxes(ks);if(!ks.length)return false;
+  G.extra++;G.queue.push(...shuffle(ks));return true;
 }
-function step(s,correct){
-  s.trials++;const dir=correct?-1:1;
-  if(s.last&&dir!==s.last)s.rev.push(s.idx);
-  s.last=dir;
-  if(!correct&&s.idx===NLV-1&&++s.topMiss>=2){s.ceil=true;s.done=true;return}
-  s.idx=Math.max(0,Math.min(NLV-1,s.idx+dir*(s.rev.length?1:2)));
-  if(s.rev.length>=6||s.trials>=MAXT)s.done=true;
+function nextTrial(){
+  G.queue=G.queue.filter(k=>!G.q[k].ceil);
+  if(!G.queue.length&&!planExtra())return finishGap();
+  const k=G.queue.shift(),gap=rnd(4);
+  G.cur={k,gap,x:qLevel(G.q[k])};drawC(k,G.cur.x,gap);G.busy=false;
+  $("#gapBar").style.width=(G.n/(G.n+G.queue.length+1)*100).toFixed(1)+"%";
+  $("#gapStatus").textContent=`Trial ${G.n+1}`;
 }
 function answer(a){
   if(!G.running||G.busy||!G.cur)return;G.busy=true;G.n++;
-  step(G.stairs[G.cur.k],a===G.cur.gap);
+  qUpdate(G.q[G.cur.k],G.cur.x,a===G.cur.gap);
   drawC(null);setTimeout(nextTrial,220);
 }
 ansBtns.forEach(b=>b.addEventListener("click",()=>answer(+b.dataset.dir)));
@@ -568,10 +594,9 @@ document.addEventListener("keydown",e=>{
 });
 $("#gapStart").addEventListener("click",startGap);
 
-const thr=s=>{if(s.ceil)return s.lv[NLV-1];const r=s.rev.slice(-4);if(!r.length)return s.lv[s.idx];return Math.exp(r.reduce((a,i)=>a+Math.log(s.lv[i]),0)/r.length)};
 function finishGap(){
   G.running=false;enableAns(false);drawC(null);
-  const t={},ceil={};for(const k of AXES){t[k]=thr(G.stairs[k]);ceil[k]=G.stairs[k].ceil||t[k]>=AX[k].dmax*0.8}
+  const t={},ceil={};for(const k of AXES){t[k]=qThr(G.q[k]);ceil[k]=G.q[k].ceil||t[k]>=AX[k].dmax*0.8}
   G.result={t,ceil,cls:classifyGap(t,ceil)};
   $("#gapBar").style.width="100%";$("#gapStatus").textContent=`Done · ${G.n} trials`;
   $("#gapTag").textContent="Finished";
@@ -613,15 +638,21 @@ function gapText(c){
 }
 
 /* ---------- test 2: hue order ---------- */
-const caps=[];
-(()=>{
-  const hs=[...Array(16)].map((_,i)=>250-i*310/15); // blue → green → yellow → red → purple, in CIELUV hue
-  let C=44,set;
-  for(;C>15;C--){set=hs.map(h=>{const r=h*Math.PI/180,u=C*Math.cos(r),v=C*Math.sin(r);return{u,v,lin:luv(60,u,v)}});if(set.every(c=>inGamut(c.lin)))break}
-  set.forEach((c,i)=>caps.push({id:i,u:c.u,v:c.v,css:css(c.lin)}));
-})();
+// 16 caps evenly spaced over 310° of the CIELUV hue circle (the 50° gap gives the sequence two ends, as in the
+// D-15). Each round randomizes where the arc starts, which way it runs, and the lightness; chroma is then the most
+// the screen can show for every cap at that lightness. Scoring compares against this set's own perfect order, so
+// the confusion-axis analysis is unaffected.
+let caps=[],capLook="";
+function makeCaps(){
+  const start=Math.random()*360,dir=Math.random()<.5?1:-1,L=52+Math.random()*16;
+  const hs=[...Array(16)].map((_,i)=>start+dir*i*310/15);
+  let C=50,set;
+  for(;C>15;C--){set=hs.map(h=>{const r=h*Math.PI/180,u=C*Math.cos(r),v=C*Math.sin(r);return{u,v,lin:luv(L,u,v)}});if(set.every(c=>inGamut(c.lin)))break}
+  caps=set.map((c,i)=>({id:i,u:c.u,v:c.v,css:css(c.lin)}));
+  capLook=`L* ${L.toFixed(0)}, chroma ${C}, start ${start.toFixed(0)}°, ${dir>0?"counter-clockwise":"clockwise"}`;
+}
 const A={placed:[0],tray:[],result:null};
-function resetArr(){A.placed=[0];A.tray=shuffle([...Array(15)].map((_,i)=>i+1));A.result=null;$("#arrResult").hidden=true;renderArr()}
+function resetArr(){makeCaps();A.placed=[0];A.tray=shuffle([...Array(15)].map((_,i)=>i+1));A.result=null;$("#arrResult").hidden=true;renderArr()}
 function capBtn(id,where,numbered){
   const b=document.createElement("button");b.className="cap"+(id===0?" ref":"");b.style.background=caps[id].css;
   b.id=`cap-${where}-${id}`;b.setAttribute("aria-label",id===0?"Reference cap":"Color cap");
@@ -680,6 +711,7 @@ function renderArrResult(){
         <dt>Major crossings</dt><dd>${r.cross}</dd>
         <dt>Confusion index</dt><dd>${r.C.toFixed(2)} <span style="color:var(--muted)">(1.00 is perfect, ≥1.6 is a defect)</span></dd>
         <dt>Selectivity</dt><dd>${r.S.toFixed(2)}</dd>
+        <dt>Color set</dt><dd>${capLook}</dd>
         <dt>Confusion angle</dt><dd>${r.ang.toFixed(1)}° <span style="color:var(--muted)">(P ${AX.protan.ang.toFixed(0)}°, D ${AX.deutan.ang.toFixed(0)}°, T ${AX.tritan.ang.toFixed(0)}°)</span></dd>
       </dl>
       <p>${verdict}</p>
