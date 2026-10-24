@@ -132,6 +132,32 @@ th,td{text-align:left;padding:.55rem .6rem;border-bottom:1px solid var(--line);v
 th{font-family:var(--f-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:400}
 tr.hit td{background:var(--soft)}
 tr.hit td:first-child{box-shadow:inset 4px 0 0 var(--ink)}
+/* photo viewer */
+.viz{display:grid;gap:1rem;border-top:1px solid var(--line);padding-top:1.5rem}
+.vizctl{display:flex;flex-wrap:wrap;gap:.75rem 1.25rem;align-items:center}
+.modes{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.modes button{all:unset;cursor:pointer;padding:.45rem .8rem;font-size:.9rem;border-right:1px solid var(--line);background:var(--surface);text-align:center}
+.modes button:last-child{border-right:0}
+.modes button[aria-pressed="true"]{background:var(--ink);color:var(--on-ink)}
+.modes button:focus-visible,.thumbs button:focus-visible,.pair figure:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.vizctl label{display:inline-flex;align-items:center;gap:.5rem;font-size:.9rem;color:var(--muted)}
+.vizctl select{font:inherit;font-size:.9rem;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:4px;padding:.35rem .5rem}
+.vizctl input[type=range]{accent-color:var(--ink);width:8rem}
+.linkbtn{all:unset;cursor:pointer;font-size:.85rem;text-decoration:underline;color:var(--muted)}
+.pair{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.pair figure{margin:0;display:grid;gap:.4rem;cursor:zoom-in}
+.pair svg,.lightbox svg{display:block;width:100%;height:auto;border-radius:4px;background:var(--stage)}
+.pair figcaption{font-size:.85rem;color:var(--muted)}
+.pair figcaption b{color:var(--ink);font-family:var(--f-display)}
+.thumbs{display:grid;grid-template-columns:repeat(6,1fr);gap:.5rem}
+.thumbs button{all:unset;cursor:pointer;border-radius:4px;overflow:hidden;outline:2px solid transparent;outline-offset:2px}
+.thumbs button[aria-pressed="true"]{outline-color:var(--ink)}
+.thumbs img{display:block;width:100%;aspect-ratio:3/2;object-fit:cover}
+.lightbox{position:fixed;inset:0;z-index:10;background:rgba(10,10,10,.92);display:grid;place-items:center;padding:16px;cursor:zoom-out}
+.lightbox figure{margin:0;display:grid;gap:.5rem;width:min(100%,calc((100vh - 5rem)*1.5))}
+.lightbox figcaption{color:#d8d8d8;font-size:.9rem}
+@media (max-width:640px){.pair{grid-template-columns:1fr}.thumbs{grid-template-columns:repeat(3,1fr)}}
+
 /* phones */
 @media (max-width:480px){
   .wrap{padding-block:1.5rem 3rem;gap:1.5rem}
@@ -140,7 +166,8 @@ tr.hit td:first-child{box-shadow:inset 4px 0 0 var(--ink)}
   .pad{grid-template-columns:repeat(3,3.8rem);grid-template-rows:repeat(3,3.8rem);justify-content:center}
   .btn{padding:.75rem 1.1rem}
   .row .btn{flex:1 1 auto}
-  .seg{display:flex}
+  .seg,.modes{display:flex;width:100%}
+  .modes button{flex:1;padding:.6rem .3rem}
   .seg label{flex:1;text-align:center;white-space:normal;padding:.6rem .4rem}
   .evidence div{padding:.6rem 0}
   table{font-size:.9rem}
@@ -222,6 +249,40 @@ tr.hit td:first-child{box-shadow:inset 4px 0 0 var(--ink)}
   <section class="panel" id="p-res" hidden>
     <div class="eyebrow">Results</div>
     <div id="resBody"></div>
+    <div class="viz" id="viz">
+      <div><h3>See the difference</h3><p class="note" id="vizNote" style="margin-top:.5rem"></p></div>
+      <div class="vizctl">
+        <div class="modes" id="vizModes" role="group" aria-label="View">
+          <button type="button" data-mode="side" aria-pressed="true">Side by side</button>
+          <button type="button" data-mode="miss" aria-pressed="false">What you miss</button>
+          <button type="button" data-mode="boost" aria-pressed="false">Color boost</button>
+        </div>
+        <label>Type <select id="vizType"><option value="protan">Protan · red</option><option value="deutan">Deutan · green</option><option value="tritan">Tritan · blue</option></select></label>
+        <label>Strength <input type="range" id="vizSev" min="0" max="100" step="1" value="100"><span class="mono" id="vizSevOut">100%</span></label>
+        <button type="button" class="linkbtn" id="vizReset" hidden>Back to my result</button>
+      </div>
+      <div class="pair" id="vizPair">
+        <figure tabindex="0"><svg viewBox="0 0 1200 800" role="img" aria-label="Original photo"><image width="1200" height="800" preserveAspectRatio="xMidYMid slice"/></svg><figcaption id="vizCapL"></figcaption></figure>
+        <figure tabindex="0"><svg viewBox="0 0 1200 800" role="img" aria-label="Filtered photo"><image width="1200" height="800" preserveAspectRatio="xMidYMid slice"/></svg><figcaption id="vizCapR"></figcaption></figure>
+      </div>
+      <p id="vizExplain"></p>
+      <div class="thumbs" id="vizThumbs" role="group" aria-label="Choose a photo"></div>
+      <p class="note">Simulation: Machado, Oliveira &amp; Fernandes (2009), blended linearly for partial strength. Color boost: Fidaner daltonization (a blue-channel variant for tritan). Photos from Wikimedia Commons, CC0 / public domain; see <a href="img/CREDITS.md">img/CREDITS.md</a>. Tap a photo to see it full screen.</p>
+      <svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false"><defs>
+        <filter id="f-sim" color-interpolation-filters="linearRGB" x="0" y="0" width="1" height="1"><feColorMatrix id="fm-sim" type="matrix"/></filter>
+        <filter id="f-boost" color-interpolation-filters="linearRGB" x="0" y="0" width="1" height="1"><feColorMatrix id="fm-boost" type="matrix"/></filter>
+        <filter id="f-miss" color-interpolation-filters="linearRGB" x="0" y="0" width="1" height="1">
+          <feColorMatrix id="fm-d1" in="SourceGraphic" type="matrix" result="d1"/>
+          <feColorMatrix id="fm-d2" in="SourceGraphic" type="matrix" result="d2"/>
+          <feComposite in="d1" in2="d2" operator="arithmetic" k2="1" k3="1" result="d"/>
+          <feColorMatrix in="d" type="matrix" values="0 0 0 0 0  0 0 0 0 0  0 0 0 0 0  3 3 3 0 -.3" result="m0"/>
+          <feGaussianBlur in="m0" stdDeviation="1.5" result="mask"/>
+          <feColorMatrix in="SourceGraphic" type="matrix" values=".1063 .3576 .0361 0 0  .1063 .3576 .0361 0 0  .1063 .3576 .0361 0 0  0 0 0 1 0" result="dim"/>
+          <feComposite in="SourceGraphic" in2="mask" operator="in" result="hi"/>
+          <feMerge><feMergeNode in="dim"/><feMergeNode in="hi"/></feMerge>
+        </filter>
+      </defs></svg>
+    </div>
     <h3>The types, for reference</h3>
     <div class="tablewrap"><table>
       <thead><tr><th>Type</th><th>Affected cone</th><th>What it's like</th><th>Prevalence</th></tr></thead>
@@ -524,6 +585,71 @@ function scoreMatch(){
 }
 
 /* ---------- results ---------- */
+/* ---------- photo viewer ---------- */
+const PHOTOS=[["raspberries","Raspberries on the bush"],["strawberry","Wild strawberries among leaves"],["peppers","Chili peppers"],["tulips","Tulip field"],["pencils","Colored pencils"],["maple","Autumn maple leaves"]];
+// daltonization error maps: how the lost difference (original − simulated) is redistributed
+const DALT={protan:[[0,0,0],[.7,1,0],[.7,0,1]],deutan:[[0,0,0],[.7,1,0],[.7,0,1]],tritan:[[1,0,.7],[0,1,.7],[0,0,0]]};
+const I3=[[1,0,0],[0,1,0],[0,0,1]];
+const V={photo:"raspberries",mode:"side",type:"deutan",sev:1,manual:false,def:{type:"deutan",sev:1},meas:null};
+// Strength s leaves (1−s) of the color difference along that axis (checked numerically for the
+// Machado matrices). A threshold t against the normal limit n means you see about n/t of a
+// difference, so s = 1 − n/t. Hitting the screen's color limit counts as 1.
+const measuredSev=()=>{if(!G.result)return null;const o={};
+  for(const k of AXES)o[k]=G.result.ceil[k]?1:Math.max(0,Math.min(1,1-NORM[k]/G.result.t[k]));return o};
+const mmul=(a,b)=>a.map(r=>[0,1,2].map(j=>r[0]*b[0][j]+r[1]*b[1][j]+r[2]*b[2][j]));
+const madd=(a,b,k=1)=>a.map((r,i)=>r.map((x,j)=>x+k*b[i][j]));
+const fmVals=m=>m.map(r=>`${r.map(x=>x.toFixed(5)).join(" ")} 0 0`).join("  ")+"  0 0 0 1 0";
+const typeName=(t,s)=>({protan:["protanomaly","protanopia"],deutan:["deuteranomaly","deuteranopia"],tritan:["tritanomaly","tritanopia"]})[t][s>=.95?1:0];
+function paintViz(){
+  const Ms=madd(I3,madd(MAT[V.type],I3,-1),V.sev);           // (1−s)·I + s·M
+  const D=madd(I3,Ms,-1);                                     // I − M: what gets lost
+  $("#fm-sim").setAttribute("values",fmVals(Ms));
+  $("#fm-boost").setAttribute("values",fmVals(madd(I3,mmul(DALT[V.type],D))));
+  $("#fm-d1").setAttribute("values",fmVals(D));
+  $("#fm-d2").setAttribute("values",fmVals(D.map(r=>r.map(x=>-x))));
+  const nm=typeName(V.type,V.sev),pct=Math.round(V.sev*100)+"%";
+  const imgs=document.querySelectorAll("#vizPair image");
+  imgs.forEach(im=>im.setAttribute("href",`img/${V.photo}.jpg`));
+  imgs[1].setAttribute("filter",`url(#f-${V.mode==="side"?"sim":V.mode})`);
+  const cap={side:[`<b>Typical color vision</b> · the original`,`<b>${nm[0].toUpperCase()+nm.slice(1)}</b> · simulated at ${pct}`,
+      `People with typical color vision see the left photo. The right one shows roughly how it looks with ${nm}. If that matches your eyes, the two look nearly the same to you, and that sameness is the color you're missing.`],
+    miss:[`<b>Typical color vision</b> · the original`,`<b>What you miss</b> · bright = colors that change`,
+      `Everything is dimmed to gray except the colors that ${nm} changes. Wherever the right photo stays bright, other people see color that looks different to you.`],
+    boost:[`<b>Original</b>`,`<b>Color boost</b> · recolored for ${nm}`,
+      `The colors that ${nm} confuses are shifted toward colors you can still tell apart, so hidden detail (berries in leaves, red in green) stands out. The colors won't look natural; the point is the contrast.`]}[V.mode];
+  $("#vizCapL").innerHTML=cap[0];$("#vizCapR").innerHTML=cap[1];$("#vizExplain").textContent=cap[2];
+  const alt=PHOTOS.find(p=>p[0]===V.photo)[1];
+  document.querySelectorAll("#vizPair svg").forEach((sv,i)=>sv.setAttribute("aria-label",i?`${alt}, ${$("#vizCapR").textContent}`:`${alt}, original`));
+  $("#vizType").value=V.type;$("#vizSev").value=Math.round(V.sev*100);$("#vizSevOut").textContent=pct+(V.meas&&Math.round(V.meas[V.type]*100)===Math.round(V.sev*100)?" · yours":"");
+  document.querySelectorAll("#vizModes button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.mode===V.mode));
+  document.querySelectorAll("#vizThumbs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.photo===V.photo));
+  $("#vizReset").hidden=!V.manual;
+}
+function vizFromResult(type,sev,note){
+  V.def={type,sev};$("#vizNote").textContent=note;
+  if(!V.manual){V.type=type;V.sev=sev}
+  paintViz();
+}
+$("#vizThumbs").innerHTML=PHOTOS.map(([k,t])=>`<button type="button" data-photo="${k}" aria-label="${t}"><img src="img/thumbs/${k}.jpg" alt="" loading="lazy"></button>`).join("");
+$("#vizThumbs").addEventListener("click",e=>{const b=e.target.closest("button");if(b){V.photo=b.dataset.photo;paintViz()}});
+$("#vizModes").addEventListener("click",e=>{const b=e.target.closest("button");if(b){V.mode=b.dataset.mode;paintViz()}});
+$("#vizType").addEventListener("change",e=>{V.type=e.target.value;if(V.meas)V.sev=V.meas[V.type];V.manual=true;paintViz()});
+$("#vizSev").addEventListener("input",e=>{V.sev=e.target.value/100;V.manual=true;paintViz()});
+$("#vizReset").addEventListener("click",()=>{V.manual=false;V.type=V.def.type;V.sev=V.def.sev;paintViz()});
+// full-screen view
+function openLightbox(fig){
+  const box=document.createElement("div");box.className="lightbox";box.setAttribute("role","dialog");box.setAttribute("aria-modal","true");box.tabIndex=-1;
+  box.innerHTML=`<figure>${fig.querySelector("svg").outerHTML}<figcaption>${fig.querySelector("figcaption").innerHTML} · tap or Esc to close</figcaption></figure>`;
+  const close=()=>{box.remove();document.removeEventListener("keydown",esc);fig.focus()};
+  const esc=e=>{if(e.key==="Escape")close()};
+  box.addEventListener("click",close);document.addEventListener("keydown",esc);
+  document.body.appendChild(box);box.focus();
+}
+document.querySelectorAll("#vizPair figure").forEach(f=>{
+  f.addEventListener("click",()=>openLightbox(f));
+  f.addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openLightbox(f)}});
+});
+
 const TYPES=[
   ["protanomaly","Protanomaly","L (red)","Reds look duller and darker; red, orange, brown and green can blur together.","~1% of men"],
   ["protanopia","Protanopia","L (red), missing","Red looks very dark, nearly black; red and green are hard to tell apart.","~1% of men"],
@@ -534,7 +660,8 @@ const TYPES=[
 ];
 function renderResults(){
   const g=G.result?.cls,a=A.result,m=M.result;
-  if(!g&&!a&&!m){$("#resBody").innerHTML=`<div class="verdict"><span class="eyebrow">No tests yet</span><div class="big">Take at least test 1 to get a result.</div><p>Test 1 is the most informative. Tests 2 and 3 confirm the type and help tell a missing cone (“-opia”) from a shifted one (“-anomaly”).</p></div>`;$("#typeTable").innerHTML=typeRows(null);return}
+  if(!g&&!a&&!m){$("#resBody").innerHTML=`<div class="verdict"><span class="eyebrow">No tests yet</span><div class="big">Take at least test 1 to get a result.</div><p>Test 1 is the most informative. Tests 2 and 3 confirm the type and help tell a missing cone (“-opia”) from a shifted one (“-anomaly”).</p></div>`;$("#typeTable").innerHTML=typeRows(null);
+    vizFromResult("deutan",1,"No test result yet, so this shows deuteranopia, the most common strong type. Take the tests and it will switch to your result.");return}
   const votes={protan:0,deutan:0,tritan:0,normal:0};
   if(g&&votes[g.type]!=null)votes[g.type]+=2;
   if(a&&votes[a.type]!=null)votes[a.type]+=1;
@@ -567,6 +694,23 @@ function renderResults(){
   $("#resBody").innerHTML=`<div class="verdict"><span class="eyebrow">Most likely · ${nAgree} of ${nTests} test${nTests>1?"s":""} agree</span><div class="big">${head}</div><p>${body}</p></div>
     <div class="evidence">${ev.map(([k,v])=>`<div><b>${k}</b><span>${v}</span></div>`).join("")}</div>`;
   $("#typeTable").innerHTML=typeRows(hit);
+  V.meas=["protan","deutan","tritan","rg"].includes(type)?measuredSev():null; // other results show a fixed example
+  if(["protan","deutan","tritan"].includes(type)){
+    const dich=sure||(m?.kind==="dichromat"&&(m.type===type||m.type==="rg"));
+    if(V.meas&&dich)V.meas[type]=1;
+    const sv=V.meas?V.meas[type]:dich?1:.7;
+    vizFromResult(type,sv,sevNote(type,sv,dich));
+  }else if(type==="rg"){const k=V.meas&&V.meas.protan>V.meas.deutan?"protan":"deutan";
+    vizFromResult(k,V.meas?V.meas[k]:.8,`Your result is red-green but the type is unclear, so this starts with ${k}. ${V.meas?sevNote(k,V.meas[k],false):""} Switch to ${k==="protan"?"deutan":"protan"} too; the strength follows your threshold on that axis. Whichever pair looks more alike to you is likely your type.`)}
+  else vizFromResult("deutan",1,type==="normal"?"You tested normal, so the filtered photo shows what people with a color vision deficiency see. Pick a type to compare.":"Your result is unclear, so this shows deuteranopia, the most common strong type. Pick a type to compare.");
+}
+function sevNote(k,sv,dich){
+  const pct=Math.round(sv*100)+"%";
+  if(!G.result)return `Set from your result: ${typeName(k,sv)} at ${pct}. Take test 1 to tie the strength to your measured threshold.`;
+  const t=G.result.t[k],n=NORM[k];
+  if(dich&&!G.result.ceil[k])return `Set to ${pct}: test 3 rated the ${k} simulation identical, which means a missing cone, though your test 1 threshold alone (${u4(t)} vs. normal ${u4(n)}) would give ${Math.round(Math.max(0,1-n/t)*100)}%.`;
+  if(G.result.ceil[k])return `Set to ${pct}: on the ${LABEL[k].split(" · ")[1]} axis you reached the most saturated color this screen can show, so the simulation removes the whole difference.`;
+  return `Bound to test 1: your ${LABEL[k].split(" · ")[1]} threshold is ${u4(t)} against a normal limit of ${u4(n)}, so you see about ${Math.round(n/t*100)}% of a color difference that a typical eye sees along that line. The simulation removes the rest: ${pct}. Changing the type uses your threshold for that axis.`;
 }
 const typeRows=hit=>TYPES.map(t=>`<tr class="${t[0]===hit?"hit":""}"><td><b>${t[1]}</b></td><td>${t[2]}</td><td>${t[3]}</td><td class="mono">${t[4]}</td></tr>`).join("");
 renderResults();
