@@ -25,6 +25,9 @@
 @media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
   --bg:#191919; --surface:#232323; --ink:#ebebeb; --muted:#a2a2a2; --line:#3b3b3b; --on-ink:#151515; --soft:#2f2f2f; color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#191919; --surface:#232323; --ink:#ebebeb; --muted:#a2a2a2; --line:#3b3b3b; --on-ink:#151515; --soft:#2f2f2f; color-scheme:dark}
+/* While a test tab is open the page around the stimulus is a fixed mid gray (~25% of white, inside the
+   10-28% luminance range of the dots) in both themes, so the eye adapts the same way on every run. */
+:root[data-surround="test"]{--bg:#8a8a8a; --surface:#949494; --ink:#0a0a0a; --muted:#262626; --line:#6f6f6f; --on-ink:#ededed; --soft:#7d7d7d; color-scheme:light}
 
 html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
 body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:1.0625rem;line-height:1.55}
@@ -40,13 +43,14 @@ p{margin:0;max-width:65ch}
 header{display:grid;gap:.9rem}
 .topbar{display:flex;justify-content:space-between;align-items:center;gap:1rem}
 .theme{font:inherit;font-family:var(--f-mono);font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;gap:.45rem;padding:.45rem .75rem;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);white-space:nowrap}
-.theme:hover{border-color:var(--ink)}
+.theme:hover:not(:disabled){border-color:var(--ink)}
+.theme:disabled{opacity:.55;cursor:not-allowed}
 .theme:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
 .theme svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 .note{font-size:.95rem;color:var(--muted);border-left:2px solid var(--line);padding-left:.9rem}
 
 /* step navigation */
-nav.steps{display:grid;grid-template-columns:repeat(4,1fr);gap:0;border:1px solid var(--line);border-radius:6px;overflow:hidden}
+nav.steps{display:grid;grid-template-columns:repeat(5,1fr);gap:0;border:1px solid var(--line);border-radius:6px;overflow:hidden}
 nav.steps button{all:unset;cursor:pointer;padding:.8rem 1rem;display:grid;gap:.15rem;border-right:1px solid var(--line);background:var(--surface)}
 nav.steps button:last-child{border-right:0}
 nav.steps button[aria-selected="true"]{background:var(--ink);color:var(--on-ink)}
@@ -54,7 +58,7 @@ nav.steps button[aria-selected="true"] .st{color:var(--on-ink);opacity:.75}
 nav.steps button:focus-visible{outline:3px solid var(--ink);outline-offset:-5px}
 nav.steps b{font-family:var(--f-display);font-size:1.05rem}
 nav.steps .st{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);letter-spacing:.04em}
-@media (max-width:640px){nav.steps{grid-template-columns:1fr 1fr}nav.steps button:nth-child(2){border-right:0}nav.steps button:nth-child(-n+2){border-bottom:1px solid var(--line)}}
+@media (max-width:640px){nav.steps{grid-template-columns:1fr 1fr}nav.steps button{border-bottom:1px solid var(--line)}nav.steps button:first-child{grid-column:1/-1}nav.steps button:nth-child(odd){border-right:0}nav.steps button:nth-child(n+4){border-bottom:0}}
 
 [hidden]{display:none!important}
 section.panel{display:grid;gap:1.25rem}
@@ -64,6 +68,29 @@ a.btn{display:inline-block;text-decoration:none}
 .btn:disabled{opacity:.4;cursor:not-allowed}
 .btn:focus-visible,.pad button:focus-visible,.cap:focus-visible,.seg label:has(input:focus-visible){outline:3px solid var(--ink);outline-offset:2px}
 .row{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center}
+
+/* screen check */
+.alerts{display:grid;gap:.5rem}
+.alert{border:1px solid var(--line);background:var(--surface);border-radius:6px;padding:.75rem 1rem;font-size:.95rem}
+.alert.warn{border:2px solid var(--ink)}
+.checkgroup{display:grid;gap:.6rem}
+.checkgroup h3 small{font-family:var(--f-body);font-weight:400;font-size:.9rem;color:var(--muted)}
+.checklist{list-style:none;margin:0;padding:0;border-top:1px solid var(--line)}
+.checklist li{border-bottom:1px solid var(--line)}
+.checklist label{display:grid;grid-template-columns:1.4rem minmax(0,1fr);gap:.75rem;padding:.7rem 0;cursor:pointer;align-items:start}
+.checklist input{width:1.15rem;height:1.15rem;margin:.2rem 0 0;accent-color:var(--ink)}
+.checklist small{display:block;color:var(--muted);font-size:.9rem;margin-top:.15rem}
+.path{font-family:var(--f-mono);font-size:.88rem}
+.levels{display:grid;grid-template-columns:1fr 1fr;gap:.75rem}
+.levelstrip{border-radius:6px;padding:14px;display:grid;gap:.4rem;border:1px solid var(--line)}
+.levelstrip .sq,.levelstrip .nums{display:flex;gap:8px}
+.levelstrip .sq i{flex:1;aspect-ratio:1;border-radius:3px}
+.levelstrip .nums span{flex:1;text-align:center;font-family:var(--f-mono);font-size:.7rem}
+.grays{display:flex;flex-wrap:wrap;gap:.9rem;align-items:end}
+.grays button{all:unset;cursor:pointer;display:grid;gap:.35rem;justify-items:center;font-family:var(--f-mono);font-size:.8rem}
+.grays i{display:block;width:6.5rem;height:4.5rem;border-radius:4px}
+.grays button[aria-pressed="true"] i,.grays button:focus-visible i{outline:3px solid var(--ink);outline-offset:3px}
+@media (max-width:560px){.levels{grid-template-columns:1fr}.grays i{width:5.5rem;height:4rem}}
 
 /* gap test */
 .gapgrid{display:grid;grid-template-columns:minmax(0,1fr) 15rem;gap:1.5rem;align-items:start}
@@ -183,23 +210,77 @@ tr.hit td:first-child{box-shadow:inset 4px 0 0 var(--ink)}
 <div class="wrap">
   <header>
     <div class="topbar">
-      <div class="eyebrow">Three screen tests · about 8 minutes</div>
+      <div class="eyebrow">Screen check + three tests · about 10 minutes</div>
       <button class="theme" id="themeBtn" type="button" aria-label="Switch to dark mode"><svg viewBox="0 0 24 24" aria-hidden="true"></svg><span>Dark</span></button>
     </div>
     <h1>Color Vision Lab</h1>
     <p class="lede">Three short tests that look at your color vision from different angles. Together they point to which cone type is affected (red, green or blue) and roughly how strongly.</p>
-    <p class="note">Before you start: turn off Night light, f.lux, True Tone, any blue-light filter and any color-blindness filter, set brightness to normal, and sit about an arm's length from the screen. A monitor isn't a calibrated clinical instrument, so treat the result as a well-informed guess and confirm it with an optometrist (an anomaloscope test settles the exact type).</p>
+    <p class="note">Start with step 0, the screen check: screen settings and room light can change your score. Even after it, a monitor isn't a calibrated clinical instrument, so treat the result as a well-informed guess and confirm it with an optometrist (an anomaloscope test settles the exact type).</p>
   </header>
 
   <nav class="steps" role="tablist" aria-label="Tests">
-    <button role="tab" id="tab-gap" data-step="gap" aria-selected="true"><span class="st" id="st-gap">1 · not started</span><b>Find the gap</b></button>
+    <button role="tab" id="tab-check" data-step="check" aria-selected="true"><span class="st" id="st-check">0 · not checked</span><b>Screen check</b></button>
+    <button role="tab" id="tab-gap" data-step="gap" aria-selected="false"><span class="st" id="st-gap">1 · not started</span><b>Find the gap</b></button>
     <button role="tab" id="tab-arr" data-step="arr" aria-selected="false"><span class="st" id="st-arr">2 · not started</span><b>Hue order</b></button>
     <button role="tab" id="tab-match" data-step="match" aria-selected="false"><span class="st" id="st-match">3 · not started</span><b>Match</b></button>
     <button role="tab" id="tab-res" data-step="res" aria-selected="false"><span class="st" id="st-res">4 · results</span><b>Your type</b></button>
   </nav>
 
+  <!-- STEP 0 -->
+  <section class="panel" id="p-check">
+    <div class="eyebrow">Step 0 · Screen check · about 2 minutes</div>
+    <h2>Set up your screen</h2>
+    <p>The tests measure very small color differences, so your screen and room matter. A web page can't read or change your display settings, so go through this list once on each device and tick each item as you go. Items that don't apply to your device can be ticked too.</p>
+    <div class="alerts" id="autoChecks" aria-live="polite"></div>
+
+    <div class="checkgroup">
+      <h3>1 · Room and seating</h3>
+      <ul class="checklist">
+        <li><label><input type="checkbox"><span><b>Even, normal room light, nothing reflecting in the screen.</b><small>Glare and reflections from windows or lamps lay a gray haze over the screen and wash out colors. Avoid colored or very warm lamps nearby. You don't need a dark room; if in doubt, dim the room rather than darken it.</small></span></label></li>
+        <li><label><input type="checkbox"><span><b>Sit about an arm's length away, facing the screen straight on.</b><small>Many screens, especially laptops, shift color when viewed at an angle.</small></span></label></li>
+      </ul>
+    </div>
+
+    <div class="checkgroup">
+      <h3>2 · Turn off features that change colors</h3>
+      <ul class="checklist">
+        <li><label><input type="checkbox"><span><b>Night light, Night Shift, True Tone, f.lux and any eye-comfort or blue-light filter are off.</b><small>These cut blue light, which hurts the blue (tritan) result most and can make it look much worse than it is. Windows: <span class="path">Settings › System › Display › Night light</span>.</small></span></label></li>
+        <li><label><input type="checkbox"><span><b>Color filters for color blindness are off.</b><small>The test would measure the filter instead of your eyes. Windows: <span class="path">Settings › Accessibility › Color filters</span>. Turn it back on afterwards if you use it.</small></span></label></li>
+        <li><label><input type="checkbox"><span><b>HDR is off.</b><small>HDR changes how ordinary colors are shown. Windows: <span class="path">Settings › System › Display › Use HDR</span>.</small></span></label></li>
+        <li><label><input type="checkbox"><span><b>Auto-brightness is off.</b><small>Brightness must stay fixed while the dot patterns change. Windows: turn off <span class="path">Change brightness automatically</span> and <span class="path">content adaptive brightness</span> under <span class="path">Settings › System › Display › Brightness</span>. On phones, turn off auto-brightness.</small></span></label></li>
+      </ul>
+    </div>
+
+    <div class="checkgroup">
+      <h3>3 · Monitor settings <small>· for separate monitors; laptops and phones can tick these</small></h3>
+      <ul class="checklist">
+        <li><label><input type="checkbox"><span><b>Picture mode is sRGB or Standard.</b><small>Use the buttons on the monitor to open its menu. Avoid Vivid, Game, Movie, Eye saver / Low blue light and Dynamic contrast. Vivid modes on wide-color screens make colors more saturated, so you'd score better than you really see.</small></span></label></li>
+        <li><label><input type="checkbox"><span><b>Color temperature is 6500K or Normal.</b><small>Not Warm or Cool. Usually in the same menu as the picture mode.</small></span></label></li>
+        <li><label><input type="checkbox"><span><b>Brightness is moderate and stays the same.</b><small>Comfortable to read, not glaring. Don't change it between tests.</small></span></label></li>
+      </ul>
+    </div>
+
+    <div class="checkgroup">
+      <h3>4 · Check what you see</h3>
+      <p>Each strip has five squares, numbered from faintest (1) to clearest (5). On a well-set screen you can see at least squares 3, 4 and 5 in both strips.</p>
+      <div class="levels" id="levels"></div>
+      <ul class="checklist">
+        <li><label><input type="checkbox"><span><b>I can see squares 3 to 5 in both strips.</b><small>Can't see them in the dark strip: brightness is too low. Can't see them in the light strip: brightness or contrast is too high. Adjust and look again.</small></span></label></li>
+      </ul>
+      <p style="margin-top:.6rem">Which of these grays looks the most neutral, without any yellow, pink or blue tint?</p>
+      <div class="grays" id="grays" role="group" aria-label="Gray patches"></div>
+      <p id="grayResult" aria-live="polite" style="color:var(--muted)"></p>
+    </div>
+
+    <div class="row">
+      <button class="btn" id="checkDone">Start test 1</button>
+      <span id="checkCount" class="mono" style="font-size:.85rem;color:var(--muted)"></span>
+    </div>
+    <p class="note">Light or dark mode doesn't matter: while a test is open the page switches to the same mid gray in both, so your eyes adjust the same way on every run. The theme button is paused until you leave the test.</p>
+  </section>
+
   <!-- TEST 1 -->
-  <section class="panel" id="p-gap">
+  <section class="panel" id="p-gap" hidden>
     <div class="eyebrow">Test 1 of 3 · Cambridge-style threshold test</div>
     <h2>Find the gap in the C</h2>
     <p>A ring shaped like the letter C is hidden in the dots. It differs from the background only in color; brightness is scrambled so you can't use it as a clue. Say which way the opening faces. When you can't see a C, say so instead of guessing. The color gets fainter as you succeed and stronger when you miss, separately along the red, green and blue confusion lines.</p>
@@ -355,13 +436,50 @@ for(const k of AXES){
 const NORM={protan:0.011,deutan:0.011,tritan:0.018}; // generous upper limits of normal for an uncalibrated screen
 
 /* ---------- tabs ---------- */
-const panels={gap:$("#p-gap"),arr:$("#p-arr"),match:$("#p-match"),res:$("#p-res")};
+const panels={check:$("#p-check"),gap:$("#p-gap"),arr:$("#p-arr"),match:$("#p-match"),res:$("#p-res")};
 function show(step){
   for(const k in panels){panels[k].hidden=k!==step;$("#tab-"+k).setAttribute("aria-selected",k===step)}
+  const testing=["gap","arr","match"].includes(step),tb=$("#themeBtn");
+  if(testing)document.documentElement.dataset.surround="test";else delete document.documentElement.dataset.surround;
+  tb.disabled=testing;tb.title=testing?"Tests use the same gray background in both themes":"";
   if(step==="res")renderResults();
 }
 document.querySelectorAll("nav.steps button").forEach(b=>b.addEventListener("click",()=>show(b.dataset.step)));
 const setStatus=(k,t)=>{$("#st-"+k).textContent=t};
+
+/* ---------- step 0: screen check ---------- */
+{
+  // what the browser can detect; Night light and OS color filters are applied after the page is drawn, so they can't be
+  const mq=q=>matchMedia(q).matches,found=[];
+  if(mq("(forced-colors: active)"))found.push("<b>High contrast mode is on.</b> It replaces the page's colors, so the tests can't work. Turn it off in <span class=\"path\">Settings › Accessibility › Contrast themes</span>.");
+  if(mq("(inverted-colors: inverted)"))found.push("<b>Color inversion is on.</b> Turn it off before testing.");
+  if(mq("(dynamic-range: high)"))found.push("<b>Your browser reports an HDR display.</b> If HDR is turned on in your display settings, turn it off for the tests.");
+  if(mq("(color-gamut: p3)"))found.push("<b>This is a wide-color screen.</b> Set the monitor's picture mode to sRGB if it has one. On Windows 11, also leave <span class=\"path\">Automatically manage color for apps</span> on if your display settings offer it.");
+  $("#autoChecks").innerHTML=(found.length?found.map(t=>`<div class="alert warn">${t}</div>`).join(""):`<div class="alert">Nothing unusual detected automatically.</div>`)
+    +`<div class="alert">A web page can't detect Night light, True Tone or color filters, so please check the list below yourself.</div>`;
+
+  const levelStrip=(bg,fg,vals,num)=>`<div class="levelstrip" style="background:${bg}"><div class="sq">${vals.map(v=>`<i style="background:rgb(${v},${v},${v})"></i>`).join("")}</div><div class="nums">${vals.map((_,i)=>`<span style="color:${num}">${i+1}</span>`).join("")}</div></div>`;
+  $("#levels").innerHTML=levelStrip("#000","",[8,14,20,28,38],"#8a8a8a")+levelStrip("#fff","",[252,247,241,233,222],"#6a6a6a");
+
+  // one neutral gray and two slightly tinted ones, in random order
+  const GR=shuffle([["neutral","rgb(128,128,128)"],["warm","rgb(138,128,114)"],["cool","rgb(117,128,141)"]]);
+  $("#grays").innerHTML=GR.map(([k,c],i)=>`<button type="button" data-k="${k}" aria-pressed="false" aria-label="Gray ${"ABC"[i]}"><i style="background:${c}"></i>${"ABC"[i]}</button>`).join("")
+    +`<button type="button" class="btn ghost" data-k="unsure" aria-pressed="false" style="font-family:var(--f-body);font-size:.9rem">Can't tell</button>`;
+  const GMSG={neutral:"Good: your screen's white looks neutral.",
+    cool:"Your screen looks warm (yellowish). Night light, Night Shift, True Tone, an eye-comfort mode or a Warm color temperature is probably on. Check items in section 2 and 3, then try again.",
+    warm:"Your screen looks a little blue. Set the monitor's color temperature to 6500K or Normal instead of Cool, then try again.",
+    unsure:"That's fine: it usually means any tint is small."};
+  $("#grays").addEventListener("click",e=>{const b=e.target.closest("button");if(!b)return;
+    $("#grays").querySelectorAll("button").forEach(x=>x.setAttribute("aria-pressed",x===b));
+    $("#grayResult").textContent=GMSG[b.dataset.k]+(b.dataset.k==="neutral"||b.dataset.k==="unsure"?"":" If you have a blue-yellow (tritan) deficiency, this check may not work for you.")});
+
+  const boxes=[...document.querySelectorAll("#p-check .checklist input")];
+  const count=()=>{const n=boxes.filter(b=>b.checked).length,N=boxes.length;
+    setStatus("check",n===N?"0 · ready":n?`0 · ${n} of ${N} checked`:"0 · not checked");
+    $("#checkCount").textContent=n===N?"All checked.":`${n} of ${N} checked`};
+  boxes.forEach(b=>b.addEventListener("change",count));count();
+  $("#checkDone").addEventListener("click",()=>{show("gap");$("nav.steps").scrollIntoView({block:"start",behavior:"smooth"})});
+}
 
 /* ---------- test 1: gap ---------- */
 const cv=$("#gapCanvas"),S=400;
