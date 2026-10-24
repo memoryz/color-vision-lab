@@ -1,4 +1,9 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Color Vision Lab</title>
+<script>try{const t=localStorage.getItem("cvl-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -17,7 +22,8 @@
   --bg:#191919; --surface:#232323; --ink:#ebebeb; --muted:#a2a2a2; --line:#3b3b3b; --on-ink:#151515; --soft:#2f2f2f; color-scheme:dark}}
 :root[data-theme="dark"]{--bg:#191919; --surface:#232323; --ink:#ebebeb; --muted:#a2a2a2; --line:#3b3b3b; --on-ink:#151515; --soft:#2f2f2f; color-scheme:dark}
 
-body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:1.0625rem;line-height:1.55}
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:1.0625rem;line-height:1.55}
 .wrap{max-width:52rem;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:2.5rem 4rem;display:grid;gap:2rem}
 h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.1}
 h1{font-size:clamp(2.2rem,6vw,3.4rem);font-weight:700;letter-spacing:-.02em}
@@ -28,6 +34,11 @@ p{margin:0;max-width:65ch}
 .eyebrow{font-family:var(--f-mono);font-size:.75rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
 .mono{font-family:var(--f-mono);font-variant-numeric:tabular-nums}
 header{display:grid;gap:.9rem}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:1rem}
+.theme{font:inherit;font-family:var(--f-mono);font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;gap:.45rem;padding:.45rem .75rem;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);white-space:nowrap}
+.theme:hover{border-color:var(--ink)}
+.theme:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.theme svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
 .note{font-size:.95rem;color:var(--muted);border-left:2px solid var(--line);padding-left:.9rem}
 
 /* step navigation */
@@ -121,12 +132,28 @@ th,td{text-align:left;padding:.55rem .6rem;border-bottom:1px solid var(--line);v
 th{font-family:var(--f-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:400}
 tr.hit td{background:var(--soft)}
 tr.hit td:first-child{box-shadow:inset 4px 0 0 var(--ink)}
+/* phones */
+@media (max-width:480px){
+  .wrap{padding-block:1.5rem 3rem;gap:1.5rem}
+  h2{font-size:1.45rem}
+  nav.steps button{padding:.7rem .75rem}
+  .pad{grid-template-columns:repeat(3,3.8rem);grid-template-rows:repeat(3,3.8rem);justify-content:center}
+  .btn{padding:.75rem 1.1rem}
+  .row .btn{flex:1 1 auto}
+  .seg{display:flex}
+  .seg label{flex:1;text-align:center;white-space:normal;padding:.6rem .4rem}
+  .evidence div{padding:.6rem 0}
+  table{font-size:.9rem}
+}
 @media (prefers-reduced-motion:reduce){*{transition:none!important}}
 </style>
 
 <div class="wrap">
   <header>
-    <div class="eyebrow">Three screen tests · about 8 minutes</div>
+    <div class="topbar">
+      <div class="eyebrow">Three screen tests · about 8 minutes</div>
+      <button class="theme" id="themeBtn" type="button" aria-label="Switch to dark mode"><svg viewBox="0 0 24 24" aria-hidden="true"></svg><span>Dark</span></button>
+    </div>
     <h1>Color Vision Lab</h1>
     <p class="lede">Three short tests that look at your color vision from different angles. Together they point to which cone type is affected (red, green or blue) and roughly how strongly.</p>
     <p class="note">Before you start: turn off Night light, f.lux, True Tone or any blue-light filter, set brightness to normal, and sit about an arm's length from the screen. A monitor isn't a calibrated clinical instrument, so treat the result as a well-informed guess and confirm it with an optometrist (an anomaloscope test settles the exact type).</p>
@@ -207,6 +234,25 @@ tr.hit td:first-child{box-shadow:inset 4px 0 0 var(--ink)}
 <script>
 (()=>{
 const $=s=>document.querySelector(s);
+
+/* ---------- theme toggle ---------- */
+const SUN='<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+const MOON='<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>';
+const isDark=()=>(document.documentElement.dataset.theme||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"))==="dark";
+function paintTheme(){
+  const d=isDark(),b=$("#themeBtn");
+  b.querySelector("svg").innerHTML=d?SUN:MOON;
+  b.querySelector("span").textContent=d?"Light":"Dark";
+  b.setAttribute("aria-label",d?"Switch to light mode":"Switch to dark mode");
+}
+$("#themeBtn").addEventListener("click",()=>{
+  const t=isDark()?"light":"dark";
+  document.documentElement.dataset.theme=t;
+  try{localStorage.setItem("cvl-theme",t)}catch(e){}
+  paintTheme();
+});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",paintTheme);
+paintTheme();
 const rnd=n=>Math.floor(Math.random()*n);
 const shuffle=a=>{for(let i=a.length-1;i>0;i--){const j=rnd(i+1);[a[i],a[j]]=[a[j],a[i]]}return a};
 function norm180(a){while(a>90)a-=180;while(a<=-90)a+=180;return a}
