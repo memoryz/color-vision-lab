@@ -55,6 +55,7 @@ nav.steps .st{font-family:var(--f-mono);font-size:.72rem;color:var(--muted);lett
 [hidden]{display:none!important}
 section.panel{display:grid;gap:1.25rem}
 .btn{font:inherit;font-weight:700;cursor:pointer;border:1px solid var(--ink);background:var(--ink);color:var(--on-ink);padding:.6rem 1.1rem;border-radius:4px}
+a.btn{display:inline-block;text-decoration:none}
 .btn.ghost{background:transparent;color:var(--ink)}
 .btn:disabled{opacity:.4;cursor:not-allowed}
 .btn:focus-visible,.pad button:focus-visible,.cap:focus-visible,.seg label:has(input:focus-visible){outline:3px solid var(--ink);outline-offset:2px}
@@ -183,7 +184,7 @@ tr.hit td:first-child{box-shadow:inset 4px 0 0 var(--ink)}
     </div>
     <h1>Color Vision Lab</h1>
     <p class="lede">Three short tests that look at your color vision from different angles. Together they point to which cone type is affected (red, green or blue) and roughly how strongly.</p>
-    <p class="note">Before you start: turn off Night light, f.lux, True Tone or any blue-light filter, set brightness to normal, and sit about an arm's length from the screen. A monitor isn't a calibrated clinical instrument, so treat the result as a well-informed guess and confirm it with an optometrist (an anomaloscope test settles the exact type).</p>
+    <p class="note">Before you start: turn off Night light, f.lux, True Tone, any blue-light filter and any color-blindness filter, set brightness to normal, and sit about an arm's length from the screen. A monitor isn't a calibrated clinical instrument, so treat the result as a well-informed guess and confirm it with an optometrist (an anomaloscope test settles the exact type).</p>
   </header>
 
   <nav class="steps" role="tablist" aria-label="Tests">
@@ -282,6 +283,11 @@ tr.hit td:first-child{box-shadow:inset 4px 0 0 var(--ink)}
           <feMerge><feMergeNode in="dim"/><feMergeNode in="hi"/></feMerge>
         </filter>
       </defs></svg>
+    </div>
+    <div class="verdict" style="border-width:1px">
+      <h3>Make your screen easier to read</h3>
+      <p>Windows, iPhone, Android and Mac have a built-in color filter for color-blind users that recolors everything on screen so confused colors become easier to tell apart.</p>
+      <div class="row"><a class="btn" id="filterLink" href="color-filters.html">How to turn on color filters</a></div>
     </div>
     <h3>The types, for reference</h3>
     <div class="tablewrap"><table>
@@ -660,7 +666,7 @@ const TYPES=[
 ];
 function renderResults(){
   const g=G.result?.cls,a=A.result,m=M.result;
-  if(!g&&!a&&!m){$("#resBody").innerHTML=`<div class="verdict"><span class="eyebrow">No tests yet</span><div class="big">Take at least test 1 to get a result.</div><p>Test 1 is the most informative. Tests 2 and 3 confirm the type and help tell a missing cone (“-opia”) from a shifted one (“-anomaly”).</p></div>`;$("#typeTable").innerHTML=typeRows(null);
+  if(!g&&!a&&!m){$("#resBody").innerHTML=`<div class="verdict"><span class="eyebrow">No tests yet</span><div class="big">Take at least test 1 to get a result.</div><p>Test 1 is the most informative. Tests 2 and 3 confirm the type and help tell a missing cone (“-opia”) from a shifted one (“-anomaly”).</p></div>`;$("#typeTable").innerHTML=typeRows(null);$("#filterLink").href="color-filters.html";
     vizFromResult("deutan",1,"No test result yet, so this shows deuteranopia, the most common strong type. Take the tests and it will switch to your result.");return}
   const votes={protan:0,deutan:0,tritan:0,normal:0};
   if(g&&votes[g.type]!=null)votes[g.type]+=2;
@@ -703,6 +709,8 @@ function renderResults(){
   }else if(type==="rg"){const k=V.meas&&V.meas.protan>V.meas.deutan?"protan":"deutan";
     vizFromResult(k,V.meas?V.meas[k]:.8,`Your result is red-green but the type is unclear, so this starts with ${k}. ${V.meas?sevNote(k,V.meas[k],false):""} Switch to ${k==="protan"?"deutan":"protan"} too; the strength follows your threshold on that axis. Whichever pair looks more alike to you is likely your type.`)}
   else vizFromResult("deutan",1,type==="normal"?"You tested normal, so the filtered photo shows what people with a color vision deficiency see. Pick a type to compare.":"Your result is unclear, so this shows deuteranopia, the most common strong type. Pick a type to compare.");
+  const fq=["protan","deutan","tritan"].includes(type)?`?type=${type}&sev=${Math.round(V.def.sev*100)}`:type==="rg"||type==="normal"?`?type=${type}`:"";
+  $("#filterLink").href="color-filters.html"+fq;
 }
 function sevNote(k,sv,dich){
   const pct=Math.round(sv*100)+"%";

@@ -1,0 +1,325 @@
+<!doctype html>
+<html lang="en">
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Screen Color Filters</title>
+<script>try{const t=localStorage.getItem("cvl-theme");if(t)document.documentElement.dataset.theme=t}catch(e){}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:ital,wght@0,400;0,700;1,400&family=Familjen+Grotesk:wght@500;700&family=JetBrains+Mono:wght@400;600&display=swap">
+<style>
+/* Companion page to index.html: same achromatic tokens and type scale. */
+:root{
+  --bg:#e7e7e7; --surface:#f4f4f4; --ink:#151515; --muted:#575757; --line:#c3c3c3; --on-ink:#f4f4f4; --soft:#d6d6d6;
+  --stage:#2e2e2e;
+  --f-display:"Familjen Grotesk","Helvetica Neue",Arial,sans-serif;
+  --f-body:"Atkinson Hyperlegible",system-ui,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#191919; --surface:#232323; --ink:#ebebeb; --muted:#a2a2a2; --line:#3b3b3b; --on-ink:#151515; --soft:#2f2f2f; color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#191919; --surface:#232323; --ink:#ebebeb; --muted:#a2a2a2; --line:#3b3b3b; --on-ink:#151515; --soft:#2f2f2f; color-scheme:dark}
+
+html{-webkit-text-size-adjust:100%;text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:1.0625rem;line-height:1.55}
+.wrap{max-width:52rem;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:2.5rem 4rem;display:grid;gap:2rem}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;line-height:1.1}
+h1{font-size:clamp(2.2rem,6vw,3.4rem);font-weight:700;letter-spacing:-.02em}
+h2{font-size:1.7rem;font-weight:700;letter-spacing:-.01em}
+h3{font-size:1.15rem;font-weight:700}
+p{margin:0;max-width:65ch}
+a{color:inherit}
+.lede{font-size:1.15rem;color:var(--muted)}
+.eyebrow{font-family:var(--f-mono);font-size:.75rem;text-transform:uppercase;letter-spacing:.12em;color:var(--muted)}
+.mono{font-family:var(--f-mono)}
+header{display:grid;gap:.9rem}
+.note{font-size:.95rem;color:var(--muted);border-left:2px solid var(--line);padding-left:.9rem}
+.topbar{display:flex;justify-content:space-between;align-items:center;gap:1rem}
+.back{font-family:var(--f-mono);font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);text-decoration:none}
+.back:hover{color:var(--ink);text-decoration:underline}
+.theme{font:inherit;font-family:var(--f-mono);font-size:.75rem;letter-spacing:.06em;text-transform:uppercase;cursor:pointer;display:inline-flex;align-items:center;gap:.45rem;padding:.45rem .75rem;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);white-space:nowrap}
+.theme:hover{border-color:var(--ink)}
+.theme:focus-visible,.btn:focus-visible,.tabs button:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.theme svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round}
+section{display:grid;gap:1rem}
+
+/* recommendation */
+.verdict{border:2px solid var(--ink);border-radius:6px;padding:1.4rem;display:grid;gap:.7rem;background:var(--surface)}
+.verdict .big{font-family:var(--f-display);font-weight:700;font-size:clamp(1.5rem,4vw,2rem);line-height:1.15;text-wrap:balance}
+.pick{font-family:var(--f-mono);font-size:.95rem;background:var(--soft);border-radius:4px;padding:.15rem .45rem;white-space:nowrap}
+.btn{font:inherit;font-weight:700;cursor:pointer;border:1px solid var(--ink);background:var(--ink);color:var(--on-ink);padding:.6rem 1.1rem;border-radius:4px;text-decoration:none;display:inline-block}
+.btn.ghost{background:transparent;color:var(--ink)}
+.row{display:flex;flex-wrap:wrap;gap:.75rem;align-items:center}
+
+/* steps */
+ol.steps{margin:0;padding:0;list-style:none;counter-reset:s;display:grid;gap:0;border-top:1px solid var(--line)}
+ol.steps>li{counter-increment:s;display:grid;grid-template-columns:2.2rem minmax(0,1fr);gap:.9rem;padding:.9rem 0;border-bottom:1px solid var(--line)}
+ol.steps>li::before{content:counter(s);font-family:var(--f-display);font-weight:700;font-size:1.05rem;width:1.9rem;height:1.9rem;border-radius:50%;border:1px solid var(--ink);display:grid;place-items:center}
+ol.steps>li>div{display:grid;gap:.35rem;align-content:start;padding-top:.15rem}
+kbd{font-family:var(--f-mono);font-size:.85rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:3px;padding:0 .35rem;background:var(--surface)}
+.path{font-family:var(--f-mono);font-size:.9rem}
+
+/* slider illustration: where to drag the Windows slider (it shows no numbers) */
+.slide{display:grid;grid-template-columns:minmax(0,16rem) auto;gap:.9rem;align-items:center;margin-top:.2rem}
+.slide .track{position:relative;height:4px;border-radius:2px;background:var(--line)}
+.slide .fill{position:absolute;left:0;top:0;bottom:0;border-radius:2px;background:var(--ink)}
+.slide .thumb{position:absolute;top:50%;width:18px;height:18px;margin:-9px 0 0 -9px;border-radius:50%;background:var(--surface);border:4px solid var(--ink);box-sizing:border-box}
+.slide .val{font-family:var(--f-mono);font-size:.85rem;color:var(--muted)}
+.verdict dl{display:grid;grid-template-columns:auto minmax(0,1fr);gap:.5rem 1.2rem;margin:.2rem 0 0;align-items:center}
+.verdict dt{color:var(--muted);font-size:.95rem}
+.verdict dd{margin:0}
+@media (max-width:480px){.verdict dl{grid-template-columns:1fr}.verdict dd{margin-bottom:.4rem}}
+
+/* filter table */
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.95rem}
+th,td{text-align:left;padding:.55rem .6rem;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--f-mono);font-size:.72rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);font-weight:400}
+tr.hit td{background:var(--soft)}
+tr.hit td:first-child{box-shadow:inset 4px 0 0 var(--ink)}
+
+/* try-it photo */
+.stage{background:var(--stage);border-radius:6px;padding:12px;display:grid;gap:.5rem}
+.stage img{display:block;width:100%;height:auto;aspect-ratio:3/2;object-fit:cover;border-radius:4px;cursor:zoom-in}
+.stage .cap{font-size:.85rem;color:#d8d8d8}
+.thumbs{display:grid;grid-template-columns:repeat(6,1fr);gap:.5rem}
+.thumbs button{all:unset;cursor:pointer;border-radius:4px;overflow:hidden;outline:2px solid transparent;outline-offset:2px}
+.thumbs button[aria-pressed="true"]{outline-color:var(--ink)}
+.thumbs button:focus-visible,.stage img:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+.thumbs img{display:block;width:100%;aspect-ratio:3/2;object-fit:cover}
+.lightbox{position:fixed;inset:0;z-index:10;background:rgba(10,10,10,.92);display:grid;place-items:center;padding:16px;cursor:zoom-out}
+.lightbox figure{margin:0;display:grid;gap:.5rem;width:min(100%,calc((100vh - 5rem)*1.5))}
+.lightbox img{display:block;width:100%;height:auto;border-radius:4px}
+.lightbox figcaption{color:#d8d8d8;font-size:.9rem}
+@media (max-width:640px){.thumbs{grid-template-columns:repeat(3,1fr)}}
+
+/* other devices */
+.tabs{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.tabs button{all:unset;cursor:pointer;padding:.45rem .9rem;font-size:.9rem;border-right:1px solid var(--line);background:var(--surface);text-align:center}
+.tabs button:last-child{border-right:0}
+.tabs button[aria-selected="true"]{background:var(--ink);color:var(--on-ink)}
+[hidden]{display:none!important}
+
+@media (max-width:480px){
+  .wrap{padding-block:1.5rem 3rem;gap:1.5rem}
+  h2{font-size:1.45rem}
+  .row .btn{flex:1 1 auto;text-align:center}
+  .tabs{display:flex;width:100%}.tabs button{flex:1;padding:.6rem .3rem}
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <div class="topbar">
+      <a class="back" href="index.html">← Color Vision Lab</a>
+      <button class="theme" id="themeBtn" type="button" aria-label="Switch to dark mode"><svg viewBox="0 0 24 24" aria-hidden="true"></svg><span>Dark</span></button>
+    </div>
+    <h1>Turn on screen color filters</h1>
+    <p class="lede">Windows, iPhone, Android and Mac each have a built-in color filter for color-blind users. It shifts the colors your eyes confuse toward colors you can tell apart, across every app and website. It takes a minute to set up and is easy to turn off again.</p>
+  </header>
+
+  <section aria-labelledby="rec-h">
+    <h2 id="rec-h" class="eyebrow" style="font-family:var(--f-mono);font-size:.75rem;font-weight:400">Which filter to pick</h2>
+    <div class="verdict" id="rec"></div>
+  </section>
+
+  <section aria-labelledby="win-h">
+    <h2 id="win-h">On Windows 11</h2>
+    <ol class="steps">
+      <li><div><b>Open the color filter settings</b>
+        <p>Press <kbd>Win</kbd> + <kbd>I</kbd> to open Settings, then go to <span class="path">Accessibility › Color filters</span>.</p>
+        <div class="row" style="margin-top:.3rem"><a class="btn" href="ms-settings:easeofaccess-colorfilter">Open Color filters settings</a></div>
+        <p class="note">The button only works on Windows; your browser may ask before opening Settings. If nothing happens, use the path above.</p></div></li>
+      <li><div><b>Turn on <span class="mono">Color filters</span></b>
+        <p>Switch the <span class="mono">Color filters</span> toggle to On. If the options below it are hidden, click the arrow next to the toggle to expand them.</p></div></li>
+      <li><div><b>Choose the filter for your type</b>
+        <p id="winPick">In the list under the sliders, pick one of the first three filters; the table below says which matches which type. Ignore Grayscale and the two Inverted options; they aren't for color blindness.</p></div></li>
+      <li><div><b>Set <span class="mono">Intensity</span></b>
+        <p id="winIntensity">Intensity sets how strongly the filter shifts colors. Start at the right end, then drag it left until colors look natural enough while the ones you confuse still look clearly different.</p>
+        <div class="slide" id="winIntensitySlide" hidden></div></div></li>
+      <li><div><b>Leave <span class="mono">Color Boost</span> at its default, at first</b>
+        <p id="winBoost">Color Boost changes how vivid the filtered colors are. Use a filter for a day or two before changing it: raise it if colors still look washed out, lower it if they look harsh. <span class="mono">Reset</span> puts both sliders back to the defaults.</p></div></li>
+      <li><div><b>Check with the preview at the top of the page</b>
+        <p>The <span class="mono">Color filter preview</span> above the toggle updates as you change settings. With the right filter and intensity, the Red, Orange, Yellow and Green rows of swatches should all look clearly different from each other.</p></div></li>
+    </ol>
+    <p class="note">On Windows 10 the same settings are under <span class="path">Settings › Ease of Access › Color filters</span>, and the filters are named by type: Deuteranopia, Protanopia and Tritanopia.</p>
+    <div class="tablewrap"><table>
+      <thead><tr><th>Your type</th><th>Windows 11 filter</th><th>Windows 10 name</th></tr></thead>
+      <tbody id="filterTable">
+        <tr data-type="deutan"><td><b>Deutan</b> · green weak<br><span style="color:var(--muted)">deuteranomaly, deuteranopia</span></td><td>Red-green (green weak, deuteranopia)</td><td>Deuteranopia</td></tr>
+        <tr data-type="protan"><td><b>Protan</b> · red weak<br><span style="color:var(--muted)">protanomaly, protanopia</span></td><td>Red-green (red weak, protanopia)</td><td>Protanopia</td></tr>
+        <tr data-type="tritan"><td><b>Tritan</b> · blue weak<br><span style="color:var(--muted)">tritanomaly, tritanopia</span></td><td>Blue-yellow (tritanopia)</td><td>Tritanopia</td></tr>
+      </tbody>
+    </table></div>
+    <p class="note">The filters are named after the strong (“-opia”) types, but they're meant for the milder “-anomaly” types too; lower <span class="mono">Intensity</span> is what fits a milder deficiency.</p>
+  </section>
+
+  <section aria-labelledby="try-h">
+    <h2 id="try-h">Check that it helps</h2>
+    <p>These are the same photos as on the results page, shown unaltered so that only the Windows filter changes them. Keep this page and Settings side by side, then switch the <span class="mono">Color filters</span> switch off and on a few times while looking at each photo. With the right filter and Intensity, the colors you normally confuse should look more clearly different. If you're not sure about your type, try the other red-green filter too and keep whichever helps most.</p>
+    <div class="stage">
+      <img id="tryImg" src="img/strawberry.jpg" alt="" width="2400" height="1600" tabindex="0">
+      <span class="cap" id="tryCap"></span>
+    </div>
+    <div class="thumbs" id="tryThumbs" role="group" aria-label="Choose a photo"></div>
+    <p class="note">Photos from Wikimedia Commons, CC0 / public domain; see <a href="img/CREDITS.md">img/CREDITS.md</a>. Tap a photo to see it full screen.</p>
+  </section>
+
+  <section aria-labelledby="other-h">
+    <h2 id="other-h">On other devices</h2>
+    <div class="tabs" role="tablist" aria-label="Device">
+      <button role="tab" type="button" aria-selected="true" aria-controls="d-ios" id="t-ios">iPhone / iPad</button>
+      <button role="tab" type="button" aria-selected="false" aria-controls="d-android" id="t-android">Android</button>
+      <button role="tab" type="button" aria-selected="false" aria-controls="d-mac" id="t-mac">Mac</button>
+    </div>
+    <div role="tabpanel" id="d-ios" aria-labelledby="t-ios">
+      <ol class="steps">
+        <li><div><p>Open <span class="path">Settings › Accessibility › Display &amp; Text Size › Color Filters</span> and turn on <span class="mono">Color Filters</span>.</p></div></li>
+        <li><div><p>Pick the filter: <span class="mono">Green/Red Filter (Deuteranopia)</span> for deutan, <span class="mono">Red/Green Filter (Protanopia)</span> for protan, <span class="mono">Blue/Yellow Filter (Tritanopia)</span> for tritan.</p></div></li>
+        <li><div><p>Adjust <span class="mono">Intensity</span>. <span class="devSev">Start near your strength from the results page</span> and fine-tune from there.</p></div></li>
+        <li><div><p>Optional: add Color Filters to <span class="path">Accessibility › Accessibility Shortcut</span> so a triple-click of the side button turns it on and off.</p></div></li>
+      </ol>
+    </div>
+    <div role="tabpanel" id="d-android" aria-labelledby="t-android" hidden>
+      <ol class="steps">
+        <li><div><p>Open <span class="path">Settings › Accessibility</span> and find <span class="mono">Color correction</span>. On Pixel phones it's under <span class="path">Color and motion</span>; on Samsung it's under <span class="path">Visibility enhancements</span>. The exact path varies by phone maker and Android version.</p></div></li>
+        <li><div><p>Turn on <span class="mono">Use color correction</span> and pick <span class="mono">Deuteranomaly</span>, <span class="mono">Protanomaly</span> or <span class="mono">Tritanomaly</span> to match your type.</p></div></li>
+        <li><div><p>If your phone shows an <span class="mono">Intensity</span> slider, <span class="devSev">start near your strength from the results page</span>.</p></div></li>
+      </ol>
+    </div>
+    <div role="tabpanel" id="d-mac" aria-labelledby="t-mac" hidden>
+      <ol class="steps">
+        <li><div><p>Open <span class="path">System Settings › Accessibility › Display</span> and turn on <span class="mono">Color filters</span>.</p></div></li>
+        <li><div><p>Set <span class="mono">Filter type</span>: <span class="mono">Green/Red filter (Deuteranopia)</span> for deutan, <span class="mono">Red/Green filter (Protanopia)</span> for protan, <span class="mono">Blue/Yellow filter (Tritanopia)</span> for tritan.</p></div></li>
+        <li><div><p>Adjust <span class="mono">Intensity</span>. <span class="devSev">Start near your strength from the results page</span>.</p></div></li>
+      </ol>
+    </div>
+  </section>
+
+  <section aria-labelledby="know-h">
+    <h2 id="know-h">Good to know</h2>
+    <ul style="margin:0;padding-left:1.2rem;display:grid;gap:.5rem;max-width:65ch">
+      <li>A filter doesn't restore color vision. It trades natural-looking colors for colors you can tell apart, so some things (skin, food, photos) will look a bit odd.</li>
+      <li>It changes only what's on your screen. Screenshots and screen shares stay normal for everyone else.</li>
+      <li><b>Turn it off before retaking the tests</b> on the results page, or they'll measure the filter instead of your eyes.</li>
+      <li>Color-critical work, such as photo editing, printing or picking paint, is usually better done with the filter off and a second pair of eyes.</li>
+    </ul>
+  </section>
+
+  <p class="note">Windows names match Windows 11 as of October 2026; the other devices' names are as of iOS 18, Android 15 and macOS 15. They sometimes change between versions; if a name doesn't match, search Settings for “color filter”.</p>
+</div>
+
+<script>
+(()=>{
+const $=s=>document.querySelector(s);
+
+/* ---------- theme toggle (same as index.html) ---------- */
+const SUN='<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+const MOON='<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>';
+const isDark=()=>(document.documentElement.dataset.theme||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light"))==="dark";
+function paintTheme(){
+  const d=isDark(),b=$("#themeBtn");
+  b.querySelector("svg").innerHTML=d?SUN:MOON;
+  b.querySelector("span").textContent=d?"Light":"Dark";
+  b.setAttribute("aria-label",d?"Switch to light mode":"Switch to dark mode");
+}
+$("#themeBtn").addEventListener("click",()=>{
+  const t=isDark()?"light":"dark";
+  document.documentElement.dataset.theme=t;
+  try{localStorage.setItem("cvl-theme",t)}catch(e){}
+  paintTheme();
+});
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change",paintTheme);
+paintTheme();
+
+/* ---------- recommendation from the results page (?type=deutan&sev=63) ---------- */
+// sev is the simulation strength from the results page: the share of a color difference your eyes
+// lose along that axis (100 = a missing cone). It is used as the starting Intensity; the filter
+// should compensate roughly as much as you lose. It's a starting point, not a calibration.
+const WIN={deutan:"Red-green (green weak, deuteranopia)",protan:"Red-green (red weak, protanopia)",tritan:"Blue-yellow (tritanopia)"};
+const NAME={deutan:"deutan (green weak)",protan:"protan (red weak)",tritan:"tritan (blue weak)"};
+const q=new URLSearchParams(location.search);
+const type=q.get("type"),sevRaw=parseInt(q.get("sev"),10);
+const sev=Number.isFinite(sevRaw)?Math.max(0,Math.min(100,sevRaw)):null;
+const isWin=/Windows/.test(navigator.userAgent);
+const where=x=>x>=95?"all the way to the right":[[25,"a quarter of the way"],[33,"a third of the way"],[50,"halfway"],[67,"two-thirds of the way"],[75,"three-quarters of the way"],[88,"most of the way"]]
+  .reduce((a,b)=>Math.abs(b[0]-x)<Math.abs(a[0]-x)?b:a)[1]+" from the left";
+const slide=x=>`<div class="track"><div class="fill" style="width:${x}%"></div><div class="thumb" style="left:${x}%"></div></div><span class="val">about ${x}%</span>`;
+let html,intensity=null;
+if(WIN[type]&&sev!=null){
+  intensity=sev>=95?100:Math.max(25,Math.round(sev/5)*5);
+  const mild=sev<25;
+  html=`<span class="eyebrow">From your results · ${NAME[type]}, ${sev}% strength</span>
+    <div class="big">${mild?"Your deficiency looks mild, so you may not need a filter. If you want to try one:":"Set Windows color filters like this:"}</div>
+    <dl><dt>Filter</dt><dd><span class="pick">${WIN[type]}</span></dd>
+      <dt>Intensity</dt><dd><div class="slide">${slide(intensity)}</div></dd>
+      <dt>Color Boost</dt><dd>Leave at the default for now</dd></dl>
+    <p style="color:var(--muted);font-size:.95rem">Intensity comes from your test 1 threshold: ${sev>=95?"you seem to be missing that cone entirely, so the filter should be at full strength.":`you lose about ${sev}% of the color difference a typical eye sees on that axis, so the filter starts by making up about that much.`} It's a starting point; fine-tune by eye using the steps below.</p>`;
+  $("#winPick").innerHTML=`In the list under the sliders, select <b>${WIN[type]}</b>.`;
+  $("#winIntensity").innerHTML=`Drag it about <b>${where(intensity)}</b>, matching your result. Then nudge it: lower if colors look too strange, higher if the colors you confuse still look alike.`;
+  $("#winIntensitySlide").innerHTML=slide(intensity);$("#winIntensitySlide").hidden=false;
+  document.querySelector(`#filterTable tr[data-type="${type}"]`).classList.add("hit");
+}else if(WIN[type]){
+  html=`<span class="eyebrow">From your results</span>
+    <div class="big">Your tests point to ${NAME[type]}. On Windows, choose <span class="pick">${WIN[type]}</span>.</div>
+    <p>Turn it on and use the photo check below to confirm it helps.</p>`;
+  $("#winPick").innerHTML=`In the list under the sliders, select <b>${WIN[type]}</b>.`;
+  document.querySelector(`#filterTable tr[data-type="${type}"]`).classList.add("hit");
+}else if(type==="rg"){
+  html=`<span class="eyebrow">From your results</span>
+    <div class="big">Your tests show a red-green deficiency, but not which kind.</div>
+    <p>Start with <span class="pick">${WIN.deutan}</span>, the more common type. Then try <span class="pick">${WIN.protan}</span> and keep whichever makes the photo check below easier.</p>`;
+  $("#winPick").innerHTML=`Start with <b>${WIN.deutan}</b>; if that doesn't help much, try <b>${WIN.protan}</b>.`;
+  document.querySelectorAll('#filterTable tr[data-type="deutan"],#filterTable tr[data-type="protan"]').forEach(r=>r.classList.add("hit"));
+}else if(type==="normal"){
+  html=`<span class="eyebrow">From your results</span>
+    <div class="big">Your tests came out normal, so you probably don't need a filter.</div>
+    <p>These steps are still useful to share with someone who is color-blind.</p>`;
+}else{
+  html=`<span class="eyebrow">No test result</span>
+    <div class="big">Match the filter to your type of color blindness.</div>
+    <p>Most people who are color-blind are deutan (green weak). If you don't know your type, <a href="index.html">take the tests</a> first; this page will then suggest the filter and Intensity for you. Or try both red-green filters and keep the one that helps.</p>`;
+}
+if(intensity!=null)document.querySelectorAll(".devSev").forEach(e=>e.textContent=`${e.textContent[0]}tart at about ${intensity}% (your result)`);
+$("#rec").innerHTML=html;
+
+/* ---------- try-it photos (same set as index.html, no simulation) ---------- */
+const PHOTOS=[["raspberries","Raspberries on the bush","Red berries against green leaves: with a red-green filter the berries should pop out from the leaves."],
+  ["strawberry","Wild strawberries among leaves","Find the ripe red strawberry just right of center. Without help it can blend into the leaves and stems."],
+  ["peppers","Chili peppers","Red, orange, yellow and green peppers mixed together: the green ones should stand apart from the red ones."],
+  ["tulips","Tulip field","Rows of red tulips with green stems: the red should look clearly separate from the green between the rows."],
+  ["pencils","Colored pencils","A rainbow of pencils on pink: count how many neighbors you can tell apart, especially the reds, oranges and greens."],
+  ["maple","Autumn maple leaves","Yellow, brown and green-tinged autumn leaves: watch the brown and green areas in the middle."]];
+let photo="strawberry";
+function paintTry(){
+  const [k,t,hint]=PHOTOS.find(p=>p[0]===photo);
+  $("#tryImg").src=`img/${k}.jpg`;$("#tryImg").alt=t;
+  $("#tryCap").innerHTML=`<b>${t}</b> · ${hint}`;
+  document.querySelectorAll("#tryThumbs button").forEach(b=>b.setAttribute("aria-pressed",b.dataset.photo===photo));
+}
+$("#tryThumbs").innerHTML=PHOTOS.map(([k,t])=>`<button type="button" data-photo="${k}" aria-label="${t}"><img src="img/thumbs/${k}.jpg" alt="" loading="lazy"></button>`).join("");
+$("#tryThumbs").addEventListener("click",e=>{const b=e.target.closest("button");if(b){photo=b.dataset.photo;paintTry()}});
+function openLightbox(){
+  const img=$("#tryImg"),box=document.createElement("div");box.className="lightbox";box.setAttribute("role","dialog");box.setAttribute("aria-modal","true");box.tabIndex=-1;
+  box.innerHTML=`<figure><img src="${img.getAttribute("src")}" alt="${img.alt}"><figcaption>${$("#tryCap").innerHTML} · tap or Esc to close</figcaption></figure>`;
+  const close=()=>{box.remove();document.removeEventListener("keydown",esc);img.focus()};
+  const esc=e=>{if(e.key==="Escape")close()};
+  box.addEventListener("click",close);document.addEventListener("keydown",esc);
+  document.body.appendChild(box);box.focus();
+}
+$("#tryImg").addEventListener("click",openLightbox);
+$("#tryImg").addEventListener("keydown",e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();openLightbox()}});
+paintTry();
+
+/* other-device tabs; open the visitor's own platform first */
+const tabs=[...document.querySelectorAll('[role="tab"]')];
+function pickTab(t){tabs.forEach(b=>{const on=b===t;b.setAttribute("aria-selected",on);b.tabIndex=on?0:-1;$("#"+b.getAttribute("aria-controls")).hidden=!on})}
+tabs.forEach((b,i)=>{
+  b.addEventListener("click",()=>pickTab(b));
+  b.addEventListener("keydown",e=>{const d={ArrowRight:1,ArrowLeft:-1}[e.key];if(d){const n=tabs[(i+d+tabs.length)%tabs.length];pickTab(n);n.focus()}});
+});
+const ua=navigator.userAgent;
+pickTab(/Android/.test(ua)?tabs[1]:/Macintosh/.test(ua)&&!("ontouchend" in document)?tabs[2]:tabs[0]);
+if(!isWin)$("#win-h").insertAdjacentHTML("afterend",'<p class="note">You seem to be on another device. These Windows steps are for your PC; your device\'s own steps are under “On other devices” below.</p>');
+})();
+</script>
