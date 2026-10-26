@@ -310,6 +310,7 @@ tr.hit td:first-child{box-shadow:inset 4px 0 0 var(--ink)}
       </div>
     </div>
     <div id="gapResult" hidden></div>
+    <div class="row"><button class="btn" data-next="arr">Next: test 2 · Hue order</button></div>
   </section>
 
   <!-- TEST 2 -->
@@ -328,6 +329,7 @@ tr.hit td:first-child{box-shadow:inset 4px 0 0 var(--ink)}
       <button class="btn ghost" id="arrReset">New colors</button>
     </div>
     <div id="arrResult" hidden></div>
+    <div class="row"><button class="btn" data-next="match">Next: test 3 · Match</button></div>
   </section>
 
   <!-- TEST 3 -->
@@ -338,6 +340,7 @@ tr.hit td:first-child{box-shadow:inset 4px 0 0 var(--ink)}
     <div class="refstrip"><span class="eyebrow" style="color:#bdbdbd">Reference</span><div class="strip" id="refStrip"></div></div>
     <div id="cands" style="display:grid;gap:.6rem"></div>
     <div id="matchResult" hidden></div>
+    <div class="row"><button class="btn" data-next="res">Next: see your type</button></div>
   </section>
 
   <!-- RESULTS -->
@@ -385,10 +388,10 @@ tr.hit td:first-child{box-shadow:inset 4px 0 0 var(--ink)}
     </div>
     <h3>The types, for reference</h3>
     <div class="tablewrap"><table>
-      <thead><tr><th>Type</th><th>Affected cone</th><th>What it's like</th><th>Prevalence</th></tr></thead>
+      <thead><tr><th>Type</th><th>Affected cone</th><th>What it's like</th><th>Prevalence in men</th><th>Prevalence in women</th></tr></thead>
       <tbody id="typeTable"></tbody>
     </table></div>
-    <p class="note">Prevalence figures are for people of Northern European descent; red-green types are X-linked, so they're about 20 times rarer in women. Tritan types are not sex-linked.</p>
+    <p class="note">Prevalence figures are for people of European descent. Red-green figures are pooled surveys from Sharpe, Stockman, Jägle &amp; Nathans (1999), in <i>Color Vision: From Genes to Perception</i>, Cambridge University Press. Red-green types are X-linked, so they total about 8% of men and 0.4% of women (Birch 2012, <i>JOSA A</i> 29:313). Tritan types are not sex-linked.</p>
   <section class="give" aria-labelledby="give-h">
     <h3 id="give-h">Help prevent blindness</h3>
     <p>Color blindness can't be cured, but most blindness worldwide can be prevented or treated cheaply. If you'd like to help, these two charities do this work well:</p>
@@ -463,6 +466,7 @@ function show(step){
   if(step==="res")renderResults();
 }
 document.querySelectorAll("nav.steps button").forEach(b=>b.addEventListener("click",()=>show(b.dataset.step)));
+document.querySelectorAll("[data-next]").forEach(b=>b.addEventListener("click",()=>{show(b.dataset.next);$("nav.steps").scrollIntoView({block:"start",behavior:"smooth"})}));
 const setStatus=(k,t)=>{$("#st-"+k).textContent=t};
 
 /* ---------- step 0: screen check ---------- */
@@ -829,12 +833,12 @@ document.querySelectorAll("#vizPair figure").forEach(f=>{
 });
 
 const TYPES=[
-  ["protanomaly","Protanomaly","L (red)","Reds look duller and darker; red, orange, brown and green can blur together.","~1% of men"],
-  ["protanopia","Protanopia","L (red), missing","Red looks very dark, nearly black; red and green are hard to tell apart.","~1% of men"],
-  ["deuteranomaly","Deuteranomaly","M (green)","Greens and reds shift toward each other; the most common type.","~5% of men"],
-  ["deuteranopia","Deuteranopia","M (green), missing","Red and green look alike, but red keeps its brightness.","~1% of men"],
-  ["tritanomaly","Tritanomaly","S (blue)","Blue and green, and yellow and pink, are harder to separate.","~1 in 10,000"],
-  ["tritanopia","Tritanopia","S (blue), missing","Blue looks green, yellow looks pale pink or gray.","~1 in 10,000"],
+  ["protanomaly","Protanomaly","L (red)","Reds look duller and darker; red, orange, brown and green can blur together.","~1%","0.03%"],
+  ["protanopia","Protanopia","L (red), missing","Red looks very dark, nearly black; red and green are hard to tell apart.","~1%","0.02%"],
+  ["deuteranomaly","Deuteranomaly","M (green)","Greens and reds shift toward each other; the most common type.","~5%","0.36%"],
+  ["deuteranopia","Deuteranopia","M (green), missing","Red and green look alike, but red keeps its brightness.","~1%","0.01%"],
+  ["tritanomaly","Tritanomaly","S (blue)","Blue and green, and yellow and pink, are harder to separate.","~1 in 10,000","~1 in 10,000"],
+  ["tritanopia","Tritanopia","S (blue), missing","Blue looks green, yellow looks pale pink or gray.","~1 in 10,000","~1 in 10,000"],
 ];
 function renderResults(){
   const g=G.result?.cls,a=A.result,m=M.result;
@@ -892,7 +896,7 @@ function sevNote(k,sv,dich){
   if(G.result.ceil[k])return `Set to ${pct}: on the ${LABEL[k].split(" · ")[1]} axis you reached the most saturated color this screen can show, so the simulation removes the whole difference.`;
   return `Bound to test 1: your ${LABEL[k].split(" · ")[1]} threshold is ${u4(t)} against a normal limit of ${u4(n)}, so you see about ${Math.round(n/t*100)}% of a color difference that a typical eye sees along that line. The simulation removes the rest: ${pct}. Changing the type uses your threshold for that axis.`;
 }
-const typeRows=hit=>TYPES.map(t=>`<tr class="${t[0]===hit?"hit":""}"><td><b>${t[1]}</b></td><td>${t[2]}</td><td>${t[3]}</td><td class="mono">${t[4]}</td></tr>`).join("");
+const typeRows=hit=>TYPES.map(t=>`<tr class="${t[0]===hit?"hit":""}"><td><b>${t[1]}</b></td><td>${t[2]}</td><td>${t[3]}</td><td class="mono">${t[4]}</td><td class="mono">${t[5]}</td></tr>`).join("");
 renderResults();
 })();
 </script>
